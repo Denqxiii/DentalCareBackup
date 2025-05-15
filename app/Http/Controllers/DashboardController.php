@@ -1,0 +1,82 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Patient;
+use App\Models\Appointment;
+use App\Models\TreatmentRecord;
+use Carbon\Carbon;
+
+class DashboardController extends Controller
+{
+    public function dashboard()
+    {
+        // Total Patients
+        $totalPatients = Patient::count();
+        $patientsLastMonth = Patient::whereBetween('created_at', [now()->subMonth(), now()])->count();
+        $patientsPrevMonth = Patient::whereBetween('created_at', [now()->subMonths(2), now()->subMonth()])->count();
+        $patientsPercent = $patientsPrevMonth > 0
+            ? round((($patientsLastMonth - $patientsPrevMonth) / $patientsPrevMonth) * 100)
+            : 100;
+
+        // Total Appointments
+        $totalAppointments = Appointment::count();
+        $appointmentsThisMonth = Appointment::whereMonth('created_at', now()->month)->count();
+        $appointmentsLastMonth = Appointment::whereMonth('created_at', now()->subMonth()->month)->count();
+        $appointmentsPercent = $appointmentsLastMonth > 0
+            ? round((($appointmentsThisMonth - $appointmentsLastMonth) / $appointmentsLastMonth) * 100)
+            : 100;
+
+        // Completed Treatments
+        $completedTreatments = TreatmentRecord::where('status', 'completed')->count();
+        $completedThisMonth = TreatmentRecord::where('status', 'completed')->whereMonth('created_at', now()->month)->count();
+        $completedLastMonth = TreatmentRecord::where('status', 'completed')->whereMonth('created_at', now()->subMonth()->month)->count();
+        $completedPercent = $completedLastMonth > 0
+            ? round((($completedThisMonth - $completedLastMonth) / $completedLastMonth) * 100)
+            : 100;
+
+        // New Patients
+        $newPatients = Patient::whereMonth('created_at', now()->month)->count();
+        $newPatientsLastMonth = Patient::whereMonth('created_at', now()->subMonth()->month)->count();
+        $newPatientsPercent = $newPatientsLastMonth > 0
+            ? round((($newPatients - $newPatientsLastMonth) / $newPatientsLastMonth) * 100)
+            : 100;
+
+        // Upcoming Appointment
+        $upcomingAppointments = Appointment::with('patient')->where('appointment_date', '>=', now())
+            ->orderBy('appointment_date', 'asc')
+            ->take(5)
+            ->get();
+
+        // Recent Activity Notifications
+        $recentActivities = [
+            ['message' => 'New patient registered: John Doe', 'timestamp' => now()->subMinutes(10)],
+            ['message' => 'Appointment completed for Jane Smith', 'timestamp' => now()->subHour()],
+            // Fetch dynamically from DB if needed
+        ];
+        
+        return view('dashboard', compact(
+            'totalPatients', 'patientsPercent',
+            'totalAppointments', 'appointmentsPercent',
+            'completedTreatments', 'completedPercent',
+            'newPatients', 'newPatientsPercent',
+            'upcomingAppointments',
+            'recentActivities'
+        ));
+    }
+
+    public function index()
+    {
+        // Get upcoming appointments (adjust logic as needed)
+        $upcomingAppointments = Appointment::where('appointment_date', '>=', now())
+            ->orderBy('appointment_date', 'asc')
+            ->take(5) // Or however many you want
+            ->get();
+
+        // Pass other data like activities too if needed
+        $activities = Activity::latest()->take(5)->get();
+
+        return view('dashboard', compact('upcomingAppointments', 'activities'));
+    }
+}

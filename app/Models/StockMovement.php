@@ -10,17 +10,15 @@ class StockMovement extends Model
     use HasFactory;
 
     protected $fillable = [
-        'inventory_id', 
-        'movement_type', 
-        'quantity', 
-        'price', 
+        'inventory_id',
+        'type',
+        'quantity',
         'reason',
         'performed_by',
     ];
 
-    // Define the relationship with the Inventory model
     public function inventory()
     {
-        return $this->belongsTo(Inventory::class);
+        return $this->belongsTo(Inventory::class, 'inventory_id');
     }
 }

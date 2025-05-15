@@ -1,17 +1,18 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\TreatmentRecordController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\BillController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('homepage');
-});
+})->name('homepage');
 
 Route::get('/book-appointment', function () {
     return view('book_appointment');
@@ -24,8 +25,9 @@ Route::get('/reports/treatment-report', [ReportController::class, 'generateTreat
 Route::get('/reports/treatments', [TreatmentRecordController::class, 'showReport'])->name('reports.treatments');
 
 Route::get('/api/patient-details/{id}', [PatientController::class, 'fetchPatientDetails']);
-Route::get('/book-appointment', [AppointmentController::class, 'create'])->name('appointments.book');
-Route::post('/book-appointment', [AppointmentController::class, 'store'])->name('book.appointment');
+Route::get('/book-appointment', [AppointmentController::class, 'create'])->name('book.appointment');
+Route::post('/book-appointment', [AppointmentController::class, 'store'])->name('appointment.store');
+Route::get('/patient-details/{id}', [AppointmentController::class, 'getPatientDetails'])->name('appointment.patient.details');
 
 
 // Authenticated routes
@@ -34,9 +36,7 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     });
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->middleware('verified')->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/charts', function () {
         return view('charts');
@@ -70,17 +70,21 @@ Route::middleware('auth')->group(function () {
 
     // Inventory List
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
-
     Route::resource('inventory', InventoryController::class);
-    Route::get('stock-movements/create/{inventory_id}/{movement_type}', [StockMovementController::class, 'create'])->name('stock-movements.create');
-    Route::post('stock-movements', [StockMovementController::class, 'store'])->name('stock-movements.store');
-});
+    Route::resource('stock-movements', StockMovementController::class);
+    
 
-// Profile management routes (already authenticated)
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Billing routes
+    Route::resource('bills', BillController::class);
+    Route::get('bills/{bill}/payments/create', [PaymentController::class, 'create'])->name('payments.create');
+    Route::post('bills/{bill}/payments', [PaymentController::class, 'store'])->name('payments.store');
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+    Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+
+    // Report routes
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/patients/history', [PatientController::class, 'history'])->name('patients.history');
 });
 
 require __DIR__.'/auth.php';

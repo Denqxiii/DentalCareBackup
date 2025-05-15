@@ -1,47 +1,73 @@
 <?php
 
-namespace App\Http\Controllers;
+    namespace App\Http\Controllers;
 
-use App\Models\StockMovement;
-use App\Models\Inventory;
-use Illuminate\Http\Request;
+    use App\Models\Inventory;
+    use App\Models\StockMovement;
+    use Illuminate\Http\Request;
+    use Illuminate\Support\Facades\Auth;
 
-class StockMovementController extends Controller
-{
-    // Show form for creating stock movement (Stock In, Out, or Adjustment)
-    public function create($inventory_id, $movement_type)
+    class StockMovementController extends Controller
     {
-        $inventoryItem = Inventory::findOrFail($inventory_id);
 
-        return view('stock_movements.create', compact('inventoryItem', 'movement_type'));
-    }
-
-    // Store a new stock movement
-    public function store(Request $request)
-    {
-        $request->validate([
-            'inventory_id' => 'required|exists:inventories,id',
-            'movement_type' => 'required|in:in,out,adjustment',
-            'quantity' => 'required|integer',
-            'price' => 'required|numeric',
-            'reason' => 'nullable|string|max:255',
-            'performed_by' => 'nullable|string|max:255',
-        ]);
-
-        // Create stock movement record
-        $movement = StockMovement::create($request->all());
-
-        // Update inventory quantity based on movement type
-        $inventory = Inventory::find($request->inventory_id);
-        if ($request->movement_type == 'in') {
-            $inventory->quantity_in_stock += $request->quantity;
-        } elseif ($request->movement_type == 'out') {
-            $inventory->quantity_in_stock -= $request->quantity;
-        } elseif ($request->movement_type == 'adjustment') {
-            $inventory->quantity_in_stock = $request->quantity; // Set exact quantity for adjustment
+        // Show all stock movements for a specific inventory item
+        public function index()
+        {
+            $stockMovements = StockMovement::with('inventory')->paginate(10);
+            return view('stock-movements.index', compact('stockMovements'));
         }
-        $inventory->save();
 
-        return redirect()->route('inventory.index')->with('success', 'Stock movement recorded successfully.');
+        // Show form to edit stock movement
+
+        // Show form to create stock movement
+        public function create(Request $request)
+        {
+            $inventoryId = $request->query('inventory_id');
+            $movementType = $request->query('movement_type');
+            $inventory = Inventory::findOrFail($inventoryId);
+
+            return view('stock-movements.create', compact('inventory', 'movementType'));
+        }
+
+        // Store new stock movement and update inventory quantity
+        public function store(Request $request)
+        {
+            $request->validate([
+                'inventory_id' => 'required|exists:inventory_items,id',
+                'type' => 'required|in:in,out,adjustment',
+                'quantity' => 'required|numeric|min:1',
+                'reason' => 'nullable|string|max:255',
+            ]);
+
+            $inventoryItem = Inventory::findOrFail($request->inventory_id);
+            $quantity = $request->quantity;
+            $type = $request->type;
+
+            // Adjust stock quantity depending on movement type
+            if ($type === 'in') {
+                $inventoryItem->quantity_in_stock += $quantity;
+            } elseif ($type === 'out') {
+                if ($inventoryItem->quantity_in_stock < $quantity) {
+                    return back()->withErrors(['quantity' => 'Insufficient stock to remove.']);
+                }
+                $inventoryItem->quantity_in_stock -= $quantity;
+            } elseif ($type === 'adjustment') {
+                // Adjustment can be positive or negative, so quantity can be signed
+                // But your input is positive number, maybe add a +/- option? 
+                // For now let's assume only positive adjustment adds stock:
+                $inventoryItem->quantity_in_stock += $quantity;
+            }
+
+            $inventoryItem->save();
+
+            StockMovement::create([
+                'inventory_id' => $inventoryItem->id,
+                'type' => $type,
+                'quantity' => $quantity,
+                'reason' => $request->reason,
+                'performed_by' => Auth::id() ?? null, // or some user id
+            ]);
+
+            return redirect()->route('inventory.index')->with('success', 'Stock updated successfully.');
+        }
     }
-}

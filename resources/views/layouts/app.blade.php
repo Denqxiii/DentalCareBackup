@@ -30,506 +30,255 @@
       class="flex h-screen bg-gray-50 dark:bg-gray-900"
       :class="{ 'overflow-hidden': isSideMenuOpen }"
     >
-      <!-- Desktop sidebar -->
-      <aside class="fixed inset-y-0 z-20 hidden w-64 overflow-y-auto bg-white dark:bg-gray-800 md:block flex-shrink-0 min-h-screen">
-        <div class="py-4 text-gray-500 dark:text-gray-400">
-          <a class="ml-6 text-lg font-bold text-gray-800 dark:text-gray-200" href="{{ route('dashboard') }}">
-            Dental Care
-          </a>
-          <ul class="mt-6">
-            <!-- Dashboard -->
-            <li class="relative px-6 py-3">
-              @if(request()->routeIs('dashboard'))
-                <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" aria-hidden="true"></span>
-              @endif
-              <a href="{{ route('dashboard') }}"
-                @class([
-                  'inline-flex items-center w-full text-sm font-semibold transition-colors duration-150',
-                  'text-gray-800 dark:text-gray-100' => request()->routeIs('dashboard'),
-                  'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200' => !request()->routeIs('dashboard'),
-                ])>
-                <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span class="ml-4">Dashboard</span>
-              </a>
-            </li>
-          </ul>
-
-          <ul>
-            <!-- Pages Dropdown -->
-            @php
-              $pagesActive = request()->routeIs('Registration') ||
-                              request()->routeIs('Registered') ||
-                              request()->routeIs('History');
-            @endphp
-            <li class="relative px-6 py-3">
-              @if($pagesActive)
-                <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" aria-hidden="true"></span>
-              @endif
-              <button class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                      @click="togglePagesMenu" aria-haspopup="true">
-                <span class="inline-flex items-center">
-                  <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke-linecap="round"
-                      stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                  </svg>
-                  <span class="ml-4">Patient Information</span>
-                </span>
-                <svg class="w-4 h-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-              </button>
-              <template x-if="isPagesMenuOpen">
-                <ul x-transition:enter="transition-all ease-in-out duration-300"
-                    x-transition:enter-start="opacity-25 max-h-0"
-                    x-transition:enter-end="opacity-100 max-h-xl"
-                    x-transition:leave="transition-all ease-in-out duration-300"
-                    x-transition:leave-start="opacity-100 max-h-xl"
-                    x-transition:leave-end="opacity-0 max-h-0"
-                    class="p-2 mt-2 space-y-2 overflow-hidden text-sm font-medium text-gray-500 rounded-md shadow-inner bg-gray-50 dark:text-gray-400 dark:bg-gray-900"
-                    aria-label="submenu">
-                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200">
-                    <a class="w-full" href="{{ route('register_patients') }}">Registration</a>
-                  </li> 
-                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200">
-                    <a class="w-full" href="{{ route('patients.index') }}">Registered</a>
-                  </li>
-                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200">
-                    <a class="w-full" href="{{ url('/404') }}">History</a>
-                  </li>
-                </ul>
-              </template>
-            </li>
-          </ul>
-
-          <ul>
-            <!-- Appointments -->
-            <li class="relative px-6 py-3">
-              @if(request()->routeIs('admin.appointments.index'))
-                <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" aria-hidden="true"></span>
-              @endif
-              <a href="{{ route('admin.appointments.index') }}"
-                @class([
-                  'inline-flex items-center w-full text-sm font-semibold transition-colors duration-150',
-                  'text-gray-800 dark:text-gray-100' => request()->routeIs('admin.appointments.index'),
-                  'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200' => !request()->routeIs('admin.appointments.index'),
-                ])>
-                <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M3 7h18M3 12h18M3 17h18"></path>
-                </svg>
-                <span class="ml-4">Appointments</span>
-              </a>
-            </li>
-          </ul>
-
-          <ul>
-              <!-- Inventory -->
-              <li class="relative px-6 py-3">
-                  @if(request()->routeIs('inventory.index'))
-                      <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" aria-hidden="true"></span>
-                  @endif
-                  <a href="{{ route('inventory.index') }}"
-                    @class([
-                        'inline-flex items-center w-full text-sm font-semibold transition-colors duration-150',
-                        'text-gray-800 dark:text-gray-100' => request()->routeIs('inventory'),
-                        'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200' => !request()->routeIs('inventory'),
-                    ])>
-                      <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke-linecap="round"
-                          stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                          <path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                          <path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-                      </svg>
-                      <span class="ml-4">Inventory</span>
-                  </a>
-              </li>
-          </ul>
-
-          <!-- Theme toggler inside a navbar or anywhere -->
-          <li class="flex items-center space-x-4">
-            <span class="text-sm text-gray-700 dark:text-gray-300">&nbsp;&nbsp;Theme Mode: </span>
-            <button
-                  class="rounded-md focus:outline-none focus:shadow-outline-purple"
-                  @click="toggleTheme"
-                  aria-label="Toggle color mode"
-                >
-                  <template x-if="!dark">
-                    <svg
-                      class="w-5 h-5" 6z"
-                      ></path>
-                    </svg>
-                  </template>
-                  <template x-if="dark">
-                    <svg
-                      class="w-5 h-5"
-                      aria-hidden="true"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-                        clip-rule="evenodd"
-                      ></path>
-                    </svg>
-                  </template>
-            </button>
-          </li>
-
-          <!-- Logout Button (Moved) -->
-          <ul>
-            <li class="relative px-6 py-3">
-              <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button
-                  type="submit"
-                  class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-                >
-                  <svg
-                    class="w-5 h-5"
-                    aria-hidden="true"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                  </svg>
-                  <span class="ml-4">Log out</span>
-                </button>
-              </form>
-            </li>
-          </ul>
-        </div>
-      </aside>
-      <!-- Mobile sidebar -->
-      <!-- Backdrop -->
-      <div
-        x-show="isSideMenuOpen"
-        x-transition:enter="transition ease-in-out duration-150"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in-out duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-10 flex items-end bg-black bg-opacity-50 sm:items-center sm:justify-center"
-      ></div>
+      <!-- Desktop Sidebar -->
       <aside
-        class="fixed inset-y-0 z-20 flex-shrink-0 w-64 mt-16 overflow-y-auto bg-white dark:bg-gray-800 md:hidden"
-        x-show="isSideMenuOpen"
-        x-transition:enter="transition ease-in-out duration-150"
-        x-transition:enter-start="opacity-0 transform -translate-x-20"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in-out duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0 transform -translate-x-20"
-        @click.away="closeSideMenu"
-        @keydown.escape="closeSideMenu"
+        class="fixed inset-y-0 z-20 hidden w-64 overflow-y-auto bg-white dark:bg-gray-800 md:block shadow-lg"
       >
-        <div class="py-4 text-gray-500 dark:text-gray-400">
+        <div class="py-6 px-6 flex flex-col h-full">
+          <!-- Logo -->
           <a
-            class="ml-6 text-lg font-bold text-gray-800 dark:text-gray-200"
-            href="#"
+            href="{{ route('dashboard') }}"
+            class="mb-8 flex items-center space-x-3 text-gray-900 dark:text-white font-bold text-xl tracking-wide"
           >
-            Dental Care
-          </a>
-          <ul class="mt-6">
-            <li class="relative px-6 py-3">
-              <span
-                class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg"
-                aria-hidden="true"
-              ></span>
-              <a
-                class="inline-flex items-center w-full text-sm font-semibold text-gray-800 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100"
-                href="index.html"
-              >
-                <svg
-                  class="w-5 h-5"
-                  aria-hidden="true"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  ></path>
-                </svg>
-                <span class="ml-4">Dashboard</span>
-              </a>
-            </li>
-          </ul>
-          <ul>
-          <li class="relative px-6 py-3">
-              <button
-                class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                @click="togglePagesMenu"
-                aria-haspopup="true"
-              >
-                <span class="inline-flex items-center">
-                  <svg
-                    class="w-5 h-5"
-                    aria-hidden="true"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
-                    ></path>
-                  </svg>
-                  <span class="ml-4">Patient Registration</span>
-                </span>
-                <svg
-                  class="w-4 h-4"
-                  aria-hidden="true"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clip-rule="evenodd"
-                  ></path>
-                </svg>
-              </button>
-              <template x-if="isPagesMenuOpen">
-                <ul
-                  x-transition:enter="transition-all ease-in-out duration-300"
-                  x-transition:enter-start="opacity-25 max-h-0"
-                  x-transition:enter-end="opacity-100 max-h-xl"
-                  x-transition:leave="transition-all ease-in-out duration-300"
-                  x-transition:leave-start="opacity-100 max-h-xl"
-                  x-transition:leave-end="opacity-0 max-h-0"
-                  class="p-2 mt-2 space-y-2 overflow-hidden text-sm font-medium text-gray-500 rounded-md shadow-inner bg-gray-50 dark:text-gray-400 dark:bg-gray-900"
-                  aria-label="submenu"
-                >
-                  <li
-                    class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                  >
-                    <a class="w-full" href="pages/login.html">Sample Page 1</a>
-                  </li>
-                  <li
-                    class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                  >
-                    <a class="w-full" href="pages/create-account.html">
-                      Sample Page 2
-                    </a>
-                  </li>
-                  <li
-                    class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                  >
-                    <a class="w-full" href="pages/forgot-password.html">
-                      Sample Page 3
-                    </a>
-                  </li>
-                </ul>
-              </template>
-            </li>
-            <li class="relative px-6 py-3">
-              <a
-                class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                href="cards.html"
-              >
-                <svg
-                  class="w-5 h-5"
-                  aria-hidden="true"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  ></path>
-                </svg>
-                <span class="ml-4">Cards</span>
-              </a>
-            </li>
-            <li class="relative px-6 py-3">
-              <a
-                class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                href="charts.html"
-              >
-                <svg
-                  class="w-5 h-5"
-                  aria-hidden="true"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
-                  ></path>
-                  <path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
-                </svg>
-                <span class="ml-4">Charts</span>
-              </a>
-            </li>
-            <li class="relative px-6 py-3">
-              <a
-                class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                href="buttons.html"
-              >
-                <svg
-                  class="w-5 h-5"
-                  aria-hidden="true"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-                  ></path>
-                </svg>
-                <span class="ml-4">Buttons</span>
-              </a>
-            </li>
-            <li class="relative px-6 py-3">
-              <a
-                class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                href="modals.html"
-              >
-                <svg
-                  class="w-5 h-5"
-                  aria-hidden="true"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  ></path>
-                </svg>
-                <span class="ml-4">Modals</span>
-              </a>
-            </li>
-            <li class="relative px-6 py-3">
-              <a
-                class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                href="tables.html"
-              >
-                <svg
-                  class="w-5 h-5"
-                  aria-hidden="true"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                </svg>
-                <span class="ml-4">Tables</span>
-              </a>
-            </li>
-            <li class="relative px-6 py-3">
-              <button
-                class="inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                @click="togglePagesMenu"
-                aria-haspopup="true"
-              >
-                <span class="inline-flex items-center">
-                  <svg
-                    class="w-5 h-5"
-                    aria-hidden="true"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
-                    ></path>
-                  </svg>
-                  <span class="ml-4">Pages</span>
-                </span>
-                <svg
-                  class="w-4 h-4"
-                  aria-hidden="true"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clip-rule="evenodd"
-                  ></path>
-                </svg>
-              </button>
-              <template x-if="isPagesMenuOpen">
-                <ul
-                  x-transition:enter="transition-all ease-in-out duration-300"
-                  x-transition:enter-start="opacity-25 max-h-0"
-                  x-transition:enter-end="opacity-100 max-h-xl"
-                  x-transition:leave="transition-all ease-in-out duration-300"
-                  x-transition:leave-start="opacity-100 max-h-xl"
-                  x-transition:leave-end="opacity-0 max-h-0"
-                  class="p-2 mt-2 space-y-2 overflow-hidden text-sm font-medium text-gray-500 rounded-md shadow-inner bg-gray-50 dark:text-gray-400 dark:bg-gray-900"
-                  aria-label="submenu"
-                >
-                  <li
-                    class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                  >
-                    <a class="w-full" href="pages/login.html">Sample Page 1</a>
-                  </li>
-                  <li
-                    class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                  >
-                    <a class="w-full" href="pages/create-account.html">
-                      Sample Page 2
-                    </a>
-                  </li>
-                  <li
-                    class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-                  >
-                    <a class="w-full" href="pages/forgot-password.html">
-                      Sample Page 3
-                    </a>
-                  </li>
-                </ul>
-              </template>
-            </li>
-          </ul>
-          <div class="px-6 my-6">
-            <button
-              class="flex items-center justify-between px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-purple-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
             >
-              Create account
-              <span class="ml-2" aria-hidden="true">+</span>
-            </button>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12h6m-3-3v6m6 3v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a6 6 0 0112 0z"
+              />
+            </svg>
+            <span>Dental Care</span>
+          </a>
+
+          <!-- Navigation Menu -->
+          <nav class="flex flex-col space-y-1 flex-grow">
+            <!-- Dashboard -->
+            <a
+              href="{{ route('dashboard') }}"
+              @class([
+                "flex items-center px-4 py-3 rounded-lg transition-colors duration-200",
+                "bg-purple-600 text-white" => request()->routeIs('dashboard'),
+                "text-gray-700 dark:text-gray-300 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-gray-800 dark:hover:text-purple-400" => !request()->routeIs('dashboard'),
+              ])
+              aria-current="{{ request()->routeIs('dashboard') ? 'page' : false }}"
+            >
+              <svg
+                class="w-5 h-5 mr-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              <span class="ml-4">Dashboard</span>
+            </a>
+
+            <!-- Patient Management -->
+            <div
+              x-data="{ open: {{ request()->routeIs('register_patients') || request()->routeIs('patients.index') || request()->routeIs('patients.history') ? 'true' : 'false' }} }"
+              class="relative"
+            >
+              <button
+                @click="open = !open"
+                class="flex items-center justify-between w-full px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-gray-800 dark:hover:text-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                aria-haspopup="true"
+                :aria-expanded="open.toString()"
+              >
+                <span class="flex items-center">
+                  <svg
+                    class="w-5 h-5 mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                    />
+                  </svg>
+                  <span class="ml-4">Patient Management</span>
+                </span>
+                <svg
+                  :class="{ 'transform rotate-180': open }"
+                  class="w-4 h-4 transition-transform duration-300"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+              <ul
+                x-show="open"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 max-h-0"
+                x-transition:enter-end="opacity-100 max-h-40"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 max-h-40"
+                x-transition:leave-end="opacity-0 max-h-0"
+                class="pl-12 mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400"
+                aria-label="submenu"
+              >
+                <li>
+                  <a
+                    href="{{ route('register_patients') }}"
+                    class="block px-3 py-2 rounded hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-gray-800 dark:hover:text-purple-400"
+                  >
+                    Registration
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="{{ route('patients.index') }}"
+                    class="block px-3 py-2 rounded hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-gray-800 dark:hover:text-purple-400"
+                  >
+                    Registered
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="{{ route('patients.history') }}"
+                    class="block px-3 py-2 rounded hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-gray-800 dark:hover:text-purple-400"
+                  >
+                    History
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Appointments -->
+            <a
+              href="{{ route('admin.appointments.index') }}"
+              @class([
+                "flex items-center px-4 py-3 rounded-lg transition-colors duration-200",
+                "bg-purple-600 text-white" => request()->routeIs('admin.appointments.index'),
+                "text-gray-700 dark:text-gray-300 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-gray-800 dark:hover:text-purple-400" => !request()->routeIs('admin.appointments.index'),
+              ])
+              aria-current="{{ request()->routeIs('admin.appointments.index') ? 'page' : false }}"
+            >
+              <svg
+                class="w-5 h-5 mr-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M3 7h18M3 12h18M3 17h18" />
+              </svg>
+              <span class="ml-4">Appointments</span>
+            </a>
+
+            <!-- Inventory -->
+            <a
+              href="{{ route('inventory.index') }}"
+              @class([
+                "flex items-center px-4 py-3 rounded-lg transition-colors duration-200",
+                "bg-purple-600 text-white" => request()->routeIs('inventory.index'),
+                "text-gray-700 dark:text-gray-300 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-gray-800 dark:hover:text-purple-400" => !request()->routeIs('inventory.index'),
+              ])
+              aria-current="{{ request()->routeIs('inventory.index') ? 'page' : false }}"
+            >
+              <svg
+                class="w-5 h-5 mr-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+                />
+                <path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+              </svg>
+              <span class="ml-4">Inventory</span>
+            </a>
+
+            <!-- Reports -->
+            <a
+              href="{{ route('reports.index') }}"
+              @class([
+                "flex items-center px-4 py-3 rounded-lg transition-colors duration-200",
+                "bg-purple-600 text-white" => request()->routeIs('reports.index'),
+                "text-gray-700 dark:text-gray-300 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-gray-800 dark:hover:text-purple-400" => !request()->routeIs('reports.index'),
+              ])
+              aria-current="{{ request()->routeIs('reports.index') ? 'page' : false }}"
+            >
+              <svg
+                class="w-5 h-5 mr-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M9 17v-6a2 2 0 012-2h3" />
+                <path d="M12 3v4m0 0v4m0-4h4m-4 0H8" />
+              </svg>
+              <span class="ml-4">Reports</span>
+            </a>
+          </nav>
+
+          <!-- Logout -->
+          <div class="mt-auto pt-6 border-t border-gray-200 dark:border-gray-700">
+            <form method="POST" action="{{ route('logout') }}">
+              @csrf
+              <button
+                type="submit"
+                class="w-full flex items-center justify-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-red-100 hover:text-red-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 transition"
+              >
+                <svg
+                  class="w-5 h-5 mr-3 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                  <path d="M7 16v-1a4 4 0 014-4h6" />
+                </svg>
+                Logout
+              </button>
+            </form>
           </div>
         </div>
-      </aside><div class="flex flex-col flex-1 w-full">
-        <header class="z-10 py-4">
-        </header>
-        <!-- Main Content Wrapper -->
+      </aside>
+
+      <!-- Main Content -->
+      <div class="flex flex-col flex-1 w-full">
+        <header class="z-10 py-4"></header>
         <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-            <!-- This is where the extending view will inject its content -->
-            @yield('content')
+          @yield('content')
         </div>
       </div>
     </div>

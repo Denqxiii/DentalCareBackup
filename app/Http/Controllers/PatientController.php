@@ -151,4 +151,13 @@ class PatientController extends Controller
 
         return response()->json(['success' => false], 404);
     }
+
+    public function history()
+    {
+        // Fetch patient history data (replace with your actual logic)
+        $patients = Patient::with('appointments')->get();
+
+        // Return the patient history view
+        return view('patients.history', compact('patients'));
+    }
 }

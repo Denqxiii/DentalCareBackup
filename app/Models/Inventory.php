@@ -21,6 +21,6 @@ class Inventory extends Model
 
     public function stockMovements()
     {
-        return $this->hasMany(StockMovement::class);
+        return $this->hasMany(StockMovement::class, 'inventory_id');
     }
 }

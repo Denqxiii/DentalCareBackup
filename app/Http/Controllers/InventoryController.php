@@ -7,11 +7,24 @@ use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $inventoryItems = Inventory::all();
-        return view('inventory.inventory', compact('inventoryItems'));
+        $query = Inventory::query();
+
+        if ($request->filled('search')) {
+            $query->where('item_name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        // Paginate results, 10 items per page
+        $inventoryItems = $query->paginate(10);
+
+        return view('inventory.index', compact('inventoryItems'));
     }
+
 
     public function store(Request $request)
     {
