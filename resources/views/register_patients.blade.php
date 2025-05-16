@@ -4,7 +4,7 @@
     <main class="h-full pb-16 overflow-y-auto">
         <div class="container px-6 mx-auto grid">
             <h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
-                Patient Registration
+                PATIENT'S REGISTRATION
             </h2>
 
             <div class="px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800">
@@ -18,17 +18,17 @@
                     <div class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-6">
                         <label class="block text-sm">
                             <span class="text-gray-700 dark:text-gray-400">First Name</span>
-                            <input name="first_name" class="block mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 form-input">
+                            <input name="first_name" class="block mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 form-input" placeholder="First Name">
                         </label>
 
                         <label class="block text-sm">
                             <span class="text-gray-700 dark:text-gray-400">Middle Name</span>
-                            <input name="middle_name" class="block mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 form-input">
+                            <input name="middle_name" class="block mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 form-input" placeholder="Second Name">
                         </label>
 
                         <label class="block text-sm">
                             <span class="text-gray-700 dark:text-gray-400">Last Name</span>
-                            <input name="last_name" class="block mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 form-input">
+                            <input name="last_name" class="block mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 form-input" placeholder="Last Name">
                         </label>
 
                         <label class="block text-sm">
@@ -98,10 +98,7 @@
                     if (data.status === "success") {
                         // Display success message via Toast or alert
                         showToast("Patient registered successfully!");
-                        form.reset(); // Reset form fields
-
-                        // Optionally, redirect to another page
-                        // window.location.replace("{{ route('patients.index') }}");
+                        form.reset();
                     } else {
                         // Handle error
                         showToast("Error occurred! Please try again.");
@@ -126,4 +123,3 @@
         });
     </script>
 @endsection
-

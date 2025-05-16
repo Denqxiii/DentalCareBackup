@@ -29,9 +29,8 @@ class BillController extends Controller
     // Show the form to create a new bill
     public function create()
     {
-        $patients = Patient::all();
-        $appointments = Appointment::with('patient')->get();
-
+        $patients = Patient::orderBy('last_name')->orderBy('first_name')->get();
+        
         return view('billing.bills.create', compact('patients'));
     }
 
@@ -40,27 +39,42 @@ class BillController extends Controller
     {
         $request->validate([
             'patient_id' => 'required|exists:patients,id',
-            'appointment_id' => 'nullable|exists:appointments,id', // Optional field
+            'appointment_id' => 'nullable|exists:appointments,id',
             'total_amount' => 'required|numeric|min:0.01',
+            'amount_paid' => 'required|numeric|min:0',
         ]);
 
-        Invoice::create([
+        // Calculate balance
+        $totalAmount = $request->total_amount;
+        $paidAmount = $request->amount_paid;
+        $balance = max(0, $totalAmount - $paidAmount);
+        
+        // Determine status based on balance
+        $status = $balance <= 0 ? 'paid' : 'partially_paid';
+        
+        // If paid amount is 0, set status to unpaid
+        if ($paidAmount <= 0) {
+            $status = 'unpaid';
+        }
+
+        // Create the invoice
+        $invoice = Invoice::create([
             'bill_number' => 'BILL-' . time(),
             'patient_id' => $request->patient_id,
-            'appointment_id' => $request->appointment_id, // Can be null
-            'total_amount' => $request->total_amount,
-            'paid_amount' => 0,
-            'balance' => $request->total_amount,
-            'status' => 'unpaid',
+            'appointment_id' => $request->appointment_id,
+            'total_amount' => $totalAmount,
+            'paid_amount' => $paidAmount,
+            'balance' => $balance,
+            'status' => $status,
             'notes' => $request->notes,
         ]);
 
-        return redirect()->route('billing.invoices');
+        return redirect()->route('billing.invoices')->with('success', 'Bill created successfully!');
     }
 
     // Show details of a specific bill
     public function show(Invoice $bill)
     {
-        return view('bills.show', compact('bill'));
+        return view('billing.bills.show', compact('bill'));
     }
 }

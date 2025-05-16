@@ -8,71 +8,62 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\PatientRegistered;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class PatientController extends Controller
 {
     public function store(Request $request)
     {
         try {
-            // Validate form data
-            $validated = $request->validate([
-                'first_name'   => 'required|string|max:255',
-                'middle_name'  => 'nullable|string|max:255',
-                'last_name'    => 'required|string|max:255',
-                'birth_date'   => 'required|date',
-                'gender'       => 'required|in:Male,Female',
-                'address'      => 'required|string|max:255',
-                'email'        => 'required|email|unique:patients,email',
-                'phone' => 'required|string|max:15',
+            $validator = Validator::make($request->all(), [
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|unique:patients,email',
+                'phone' => 'required|string|max:20',
+                'gender' => 'required|in:Male,Female,Other',
+                'birth_date' => 'required|date',
+                'address' => 'required|string|max:255',
             ]);
 
-            // Generate a unique 5-character patient ID
-            do {
-                $patient_id = strtoupper(Str::random(5));
-            } while (Patient::where('patient_id', $patient_id)->exists());
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
-            // Store patient data
+            // Generate patient ID (example implementation)
+            $patientId = strtoupper(substr($request->first_name, 0, 1) . 
+                                substr($request->last_name, 0, 1) . 
+                                Str::random(3));
+
             $patient = Patient::create([
-                'patient_id'   => $patient_id,
-                'first_name'   => $validated['first_name'],
-                'middle_name'  => $validated['middle_name'] ?? null,
-                'last_name'    => $validated['last_name'],
-                'birth_date'   => $validated['birth_date'],
-                'gender'       => $validated['gender'],
-                'address'      => $validated['address'],
-                'email'        => $validated['email'],
-                'phone' => $validated['phone'],
+                'first_name' => $request->first_name,
+                'middle_name' => $request->middle_name ?? null,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'gender' => $request->gender,
+                'birth_date' => $request->birth_date,
+                'address' => $request->address,
+                'patient_id' => $patientId,
             ]);
 
-            // Log the created patient for debugging
-            Log::info('New patient registered:', ['patient' => $patient]);
-
-            // Send email notification (disable in local testing if needed)
+            // Send registration email (if needed)
             Mail::to($patient->email)->send(new PatientRegistered($patient));
 
-            // Return a JSON response for AJAX requests
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Patient registered successfully!',
-                'data'    => $patient
-            ], 201);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Log validation errors
-            Log::error('Validation failed:', ['errors' => $e->errors()]);
-
-            return response()->json([
-                'status' => 'error',
-                'errors' => $e->errors()
-            ], 422);
+                'data' => $patient
+            ]);
 
         } catch (\Exception $e) {
-            // Log unexpected errors
-            Log::error('Registration error:', ['message' => $e->getMessage()]);
-
+            Log::error('Patient registration error: '.$e->getMessage());
             return response()->json([
-                'status'  => 'error',
-                'message' => 'An unexpected error occurred. Please try again later.'
+                'status' => 'error',
+                'message' => 'Registration failed. Please try again.',
+                'error' => env('APP_DEBUG') ? $e->getMessage() : null
             ], 500);
         }
     }
@@ -147,12 +138,25 @@ class PatientController extends Controller
     public function fetchPatientDetails($id)
     {
         $patient = Patient::find($id);
-
-        if ($patient) {
-            return response()->json(['success' => true, 'patient' => $patient]);
+        
+        if (!$patient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Patient not found'
+            ], 404);
         }
 
-        return response()->json(['success' => false], 404);
+        return response()->json([
+            'success' => true,
+            'patient' => [
+                'first_name' => $patient->first_name,
+                'middle_name' => $patient->middle_name,
+                'last_name' => $patient->last_name,
+                'phone' => $patient->phone,
+                'gender' => $patient->gender
+                // Add other fields you need
+            ]
+        ]);
     }
 
     public function history()

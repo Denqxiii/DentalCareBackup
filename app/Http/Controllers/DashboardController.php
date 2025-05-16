@@ -44,9 +44,10 @@ class DashboardController extends Controller
             : 100;
 
         // Upcoming Appointment
-        $upcomingAppointments = Appointment::with('patient')->where('appointment_date', '>=', now())
-            ->orderBy('appointment_date', 'asc')
-            ->take(5)
+        $upcomingAppointments = Appointment::with(['patient', 'service'])
+            ->where('appointment_date', '>=', now())
+            ->orderBy('appointment_date')
+            ->take(5) // or whatever limit you want
             ->get();
 
         // Recent Activity Notifications (replace with dynamic DB queries as needed)

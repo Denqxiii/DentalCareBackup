@@ -97,7 +97,7 @@
 
                 <div class="mt-6">
                     <a href="{{ route('patients.edit_patient', $patient->patient_id) }}" class="text-blue-600">Edit</a>
-                    <a href="{{ route('patients.index') }}" class="text-blue-600 ml-4">Back to list</a>
+                    <a href="{{ route('patient.index') }}" class="text-blue-600 ml-4">Back to list</a>
                 </div>
             </div>
         </div>

@@ -74,7 +74,7 @@
                               <a href="{{ route('register_patients') }}" class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('register_patients') ? 'text-purple-800 bg-purple-50 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white' }}">
                                   Registration
                               </a>
-                              <a href="{{ route('patients.index') }}" class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('patients.index') ? 'text-purple-800 bg-purple-50 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white' }}">
+                              <a href="{{ route('patient.index') }}" class="flex items-center px-4 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('patients.index') ? 'text-purple-800 bg-purple-50 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white' }}">
                                   Registered Patients
                               </a>
                           </div>
@@ -91,7 +91,7 @@
                       </li>
 
                       <!-- Prescriptions -->
-                      <li class="px-2">
+                      <li class="px-2 hidden">
                           <a href="{{ route('prescriptions.index') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('prescriptions.*') ? 'bg-purple-100 text-purple-800 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white' }}">
                               <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -166,12 +166,7 @@
               <!-- Bottom Section -->
               <div class="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                   <!-- Theme Toggle -->
-                  <div class="flex items-center justify-between mb-4">
-                      <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Theme</span>
-                      <button @click="toggleTheme" class="p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500">
-                          <!-- Theme toggle icons -->
-                      </button>
-                  </div>
+                  
 
                   <!-- Logout Button -->
                   <form method="POST" action="{{ route('logout') }}">

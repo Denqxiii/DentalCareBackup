@@ -98,12 +98,12 @@
             </div>
         </div>
 
-        <!-- Upcoming Appointment (Bigger Card) -->
+        <!-- Upcoming Appointment -->
         <div class="mb-10">
             <div class="bg-white rounded-2xl shadow p-6">
                 <h3 class="text-xl font-bold text-blue-700 mb-4">Upcoming Appointments</h3>
 
-                @if(is_countable($upcomingAppointments) && count($upcomingAppointments) > 0)
+                @if($upcomingAppointments->count() > 0)
                     <ul class="space-y-4">
                         @foreach ($upcomingAppointments as $appointment)
                             <li>
@@ -114,7 +114,11 @@
                                     <span class="text-red-500">Patient info missing</span>
                                 @endif
                                 - 
-                                {{ $appointment->service->name ?? 'No Service' }}
+                                @if($appointment->treatment)
+                                    {{ $appointment->treatment->name }}
+                                @else
+                                    <span class="text-red-500">No treatment assigned</span>
+                                @endif
                             </li>
                         @endforeach
                     </ul>

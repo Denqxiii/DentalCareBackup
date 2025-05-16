@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Treatment extends Model
 {
-    protected $fillable = ['name', 'price', 'description'];
+    protected $fillable = [
+        'name',
+        'description',
+        'price',
+        'duration'
+    ];
 
     public function appointments()
     {

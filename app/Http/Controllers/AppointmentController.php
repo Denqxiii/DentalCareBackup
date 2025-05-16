@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Patient;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-use App\Models\Treatment;
+use App\Models\Treatment; 
+use Illuminate\Support\Facades\DB;
 
 class AppointmentController extends Controller
 {
@@ -54,28 +55,27 @@ class AppointmentController extends Controller
 
     public function store(Request $request)
     {
+        DB::beginTransaction();
         try {
             $validator = Validator::make($request->all(), [
                 'patient_id' => 'required|exists:patients,patient_id',
                 'treatment_id' => 'required|exists:treatments,id',
-                'appointment_date' => 'required|date',
-                'appointment_time' => 'required|string',
-                'message' => 'nullable|string',
-                'gender' => 'required|string|in:Male,Female,Other',
+                'appointment_date' => 'required|date|after_or_equal:today',
+                'appointment_time' => 'required|date_format:H:i',
+                'phone_number' => 'required|string|max:20',
+                'gender' => 'required|in:Male,Female,Other',
+                'message' => 'nullable|string|max:500'
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $validator->errors()->first()
+                    'errors' => $validator->errors(),
+                    'message' => 'Validation failed'
                 ], 422);
             }
 
-            $patientId = trim($request->patient_id);
-            Log::info('Booking appointment for patient_id: ' . $patientId);
-            $patient = Patient::where('patient_id', $patientId)->first();
-            Log::info('Patient lookup result:', ['patient' => $patient]);
-
+            $patient = Patient::where('patient_id', $request->patient_id)->first();
             if (!$patient) {
                 return response()->json([
                     'success' => false,
@@ -83,37 +83,45 @@ class AppointmentController extends Controller
                 ], 404);
             }
 
-            // Check if the appointment time is available
-            $existingAppointment = Appointment::where('appointment_date', $request->appointment_date)
+            // Check for existing appointment
+            $existing = Appointment::where('appointment_date', $request->appointment_date)
                 ->where('appointment_time', $request->appointment_time)
-                ->first();
+                ->exists();
 
-            if ($existingAppointment) {
+            if ($existing) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This time slot is already booked. Please select another time.'
-                ], 422);
+                    'message' => 'This time slot is already booked'
+                ], 409);
             }
 
+            // Create appointment
             $appointment = Appointment::create([
-                'patient_id' => $patient->patient_id, // Use the string ID
+                'patient_id' => $patient->patient_id,
                 'treatment_id' => $request->treatment_id,
                 'appointment_date' => $request->appointment_date,
                 'appointment_time' => $request->appointment_time,
-                'message' => $request->message,
-                'status' => 'pending'
+                'phone_number' => $request->phone_number,
+                'gender' => $request->gender,
+                'notes' => $request->message, // Using 'notes' instead of 'message'
+                'status' => 'Pending'
             ]);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Appointment booked successfully',
                 'data' => $appointment
             ]);
+
         } catch (\Exception $e) {
-            Log::error('Error creating appointment: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Appointment booking failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to book appointment. ' . $e->getMessage()
+                'message' => 'Failed to book appointment',
+                'error' => env('APP_DEBUG') ? $e->getMessage() : null
             ], 500);
         }
     }
@@ -158,8 +166,27 @@ class AppointmentController extends Controller
 
     public function getAppointments($patient_id)
     {
-        $appointments = Appointment::where('patient_id', $patient_id)->get();
-
+        $appointments = Appointment::where('patient_id', $patient_id)
+            ->with(['treatmentRecords' => function($query) {
+                $query->select('id', 'appointment_id', 'treatment_type', 'price');
+            }])
+            ->select('id', 'patient_id', 'appointment_date', 'status', 'treatment_type')
+            ->orderBy('appointment_date', 'desc')
+            ->get()
+            ->map(function($appointment) {
+                // Get treatment price from related treatment records if available
+                $treatmentPrice = $appointment->treatmentRecords->sum('price');
+                
+                return [
+                    'id' => $appointment->id,
+                    'patient_id' => $appointment->patient_id,
+                    'appointment_date' => $appointment->appointment_date,
+                    'status' => $appointment->status,
+                    'treatment_type' => $appointment->treatment_type,
+                    'treatment_price' => $treatmentPrice
+                ];
+            });
+        
         return response()->json($appointments);
     }
 

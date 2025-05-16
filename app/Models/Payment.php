@@ -4,45 +4,37 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 class Payment extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
-        'payment_number',
-        'bill_id',
+        'invoice_id',
         'amount',
         'payment_method',
         'reference_number',
-        'notes'
+        'payment_number',
+        'notes',
     ];
 
-    protected $casts = [
-        'amount' => 'decimal:2'
-    ];
-
-    protected static function boot()
+    /**
+     * Get the invoice that the payment belongs to
+     */
+    public function invoice()
     {
-        parent::boot();
-
-        static::creating(function ($payment) {
-            $payment->payment_number = 'PAY-' . strtoupper(Str::random(8));
-        });
-
-        static::created(function ($payment) {
-            // Update bill status and amounts
-            $bill = $payment->bill;
-            $bill->paid_amount += $payment->amount;
-            $bill->balance = $bill->total_amount - $bill->paid_amount;
-            $bill->updateStatus();
-        });
+        return $this->belongsTo(Invoice::class);
     }
 
-    public function bill()
+    /**
+     * Generate a unique payment number
+     * 
+     * @return string
+     */
+    public static function generatePaymentNumber()
     {
-        return $this->belongsTo(Bill::class);
+        $latestPayment = self::latest()->first();
+        $nextId = $latestPayment ? $latestPayment->id + 1 : 1;
+        return 'PAY-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
     }
 }

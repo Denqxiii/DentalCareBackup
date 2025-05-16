@@ -25,14 +25,7 @@
                     <select name="patient_id" class="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600">
                         <option value="">All Patients</option>
                         @foreach($patients as $patient)
-                            <option value="{{ $patient->patient_id }}"
-                                    @unless(request()->has('patient_id'))
-                                        {{-- Only select if no filter is applied --}}
-                                        @if($patient->last_name === 'Leclerc')
-                                            selected
-                                        @endif
-                                    @endunless
-                                    {{ request('patient_id') == $patient->patient_id ? 'selected' : '' }}>
+                            <option value="{{ $patient->patient_id }}" {{ request('patient_id') == $patient->patient_id ? 'selected' : '' }}>
                                 {{ $patient->first_name }} {{ $patient->last_name }}
                             </option>
                         @endforeach

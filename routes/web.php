@@ -20,6 +20,10 @@ Route::get('/', function () {
     return view('homepage');
 })->name('homepage');
 
+Route::get('/patients/register', function () {
+    return view('register_patients');
+})->name('register_patients');
+
 // Appointment Booking (Public)
 Route::controller(AppointmentController::class)->group(function () {
     Route::get('/book-appointment', 'create')->name('book.appointment');
@@ -31,9 +35,16 @@ Route::post('/patients', [PatientController::class, 'store'])->name('patients.st
 
 // API Routes
 Route::prefix('api')->group(function () {
-    Route::get('/patient-details/{id}', [PatientController::class, 'fetchPatientDetails']);
-    Route::get('/patient-details/{id}', [AppointmentController::class, 'getPatientDetails'])->name('appointment.patient.details');
-    Route::get('/appointments/{patient_id}', [AppointmentController::class, 'getAppointments'])->name('appointments.get');
+    // Patient details from PatientController
+    Route::get('/patients/{id}', [PatientController::class, 'fetchPatientDetails'])
+         ->name('patient.details');
+         
+    // Patient details specific to appointments
+    Route::get('/appointments/patient/{id}', [AppointmentController::class, 'getPatientDetails'])
+         ->name('appointment.patient.details');
+         
+    Route::get('/appointments/{patient_id}', [AppointmentController::class, 'getAppointments'])
+         ->name('appointments.get');
 });
 
 // Authenticated Routes
@@ -47,10 +58,7 @@ Route::middleware('auth')->group(function () {
 
     // Patient Routes
     Route::controller(PatientController::class)->group(function () {
-        Route::get('register_patients', [PatientController::class, 'index'])
-                ->name('register_patients');
-        Route::get('/registered-patients', [PatientController::class, 'index'])
-                ->name('registered.patients');
+        Route::get('/patients', [PatientController::class, 'index'])->name('patient.index');
         Route::get('/patients/{patient}', [PatientController::class, 'showDetails'])->name('patients.show_details');
         Route::get('/patients/create', [PatientController::class, 'create'])->name('patients.create');
         Route::get('/patients/{patient_id}/edit', 'edit')->name('patients.edit_patient');

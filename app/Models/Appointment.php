@@ -11,10 +11,13 @@ class Appointment extends Model
 
     protected $fillable = [
         'patient_id',
-        'treatment_type',
-        'appointment_date' => 'date',
-        'appointment_time' => 'datetime:H:i:s',
-        'status',
+        'treatment_id',
+        'appointment_date',
+        'appointment_time',
+        'phone_number', // Added
+        'gender',       // Added
+        'notes',        // Changed from 'message'
+        'status'
     ];
 
     protected $casts = [
@@ -29,5 +32,10 @@ class Appointment extends Model
     public function treatment()
     {
         return $this->belongsTo(Treatment::class);
+    }
+
+    public function service()
+    {
+        return $this->belongsTo(Treatment::class, 'treatment_id');
     }
 }

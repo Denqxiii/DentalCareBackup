@@ -45,10 +45,10 @@
                             <label for="patient_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Patient</label>
                             <select name="patient_id" id="patient_id" required
                                 class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="" selected>Select a patient</option>
+                                <option value="" disabled selected>Select a patient</option>
                                 @foreach($patients as $patient)
-                                    <option value="{{ $patient->id }}" {{ (old('patient_id') == $patient->id || (!empty(request('patient_id')) && request('patient_id') == $patient->id)) ? 'selected' : '' }}>
-                                        {{ $patient->first_name }} {{ $patient->last_name }} ({{ $patient->id }})
+                                    <option value="{{ $patient->id }}" {{ old('patient_id') == $patient->id ? 'selected' : '' }}>
+                                        {{ $patient->first_name }} {{ $patient->last_name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -62,6 +62,9 @@
                                 <option value="">Select an appointment</option>
                             </select>
                         </div>
+
+                        {{-- Treatment Price (Hidden) --}}
+                        <input type="hidden" id="treatment_price" value="0">
 
                         {{-- Total Amount --}}
                         <div>
@@ -81,6 +84,48 @@
                                     value="{{ old('total_amount') }}"
                                     class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition"
                                     required
+                                >
+                            </div>
+                        </div>
+
+                        {{-- Amount Paid --}}
+                        <div>
+                            <label for="amount_paid" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                                Amount Paid
+                            </label>
+                            <div class="relative flex items-center">
+                                <span class="absolute left-4 text-gray-500 dark:text-gray-400 text-base pointer-events-none">
+                                    ₱
+                                </span>
+                                <input 
+                                    type="number" 
+                                    name="amount_paid" 
+                                    id="amount_paid" 
+                                    step="0.01" 
+                                    min="0"
+                                    value="{{ old('amount_paid') }}"
+                                    class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition"
+                                >
+                            </div>
+                        </div>
+
+                        {{-- Change --}}
+                        <div>
+                            <label for="change_amount" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                                Change
+                            </label>
+                            <div class="relative flex items-center">
+                                <span class="absolute left-4 text-gray-500 dark:text-gray-400 text-base pointer-events-none">
+                                    ₱
+                                </span>
+                                <input 
+                                    type="number" 
+                                    name="change_amount" 
+                                    id="change_amount" 
+                                    step="0.01"
+                                    value="0.00"
+                                    class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition"
+                                    readonly
                                 >
                             </div>
                         </div>
@@ -111,50 +156,118 @@
     document.addEventListener('DOMContentLoaded', function () {
         const patientSelect = document.getElementById('patient_id');
         const appointmentSelect = document.getElementById('appointment_id');
+        const totalAmountInput = document.getElementById('total_amount');
+        const amountPaidInput = document.getElementById('amount_paid');
+        const changeAmountInput = document.getElementById('change_amount');
+        const treatmentPriceInput = document.getElementById('treatment_price');
         const oldAppointmentId = '{{ old('appointment_id', '') }}';
+        const oldPatientId = '{{ old('patient_id', '') }}';
 
         function fetchAppointments(patientId) {
             console.log(`Fetching appointments for patient ID: ${patientId}`);
             appointmentSelect.innerHTML = '<option value="">Select an appointment</option>';
-
+            
             if (patientId) {
-                fetch(`/appointments/${patientId}`)
-                    .then(response => response.json())
+                // Use absolute URL path to ensure correct routing
+                fetch(`/api/appointments/${patientId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.statusText);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log('Appointments data received:', data);
+                        
                         if (data.length === 0) {
                             const option = document.createElement('option');
                             option.value = '';
-                            option.textContent = 'No appointments available';
+                            option.textContent = 'No completed appointments available';
                             appointmentSelect.appendChild(option);
                         } else {
-                            data.forEach(appointment => {
+                            // Filter for only completed appointments
+                            const completedAppointments = data.filter(appointment => 
+                                appointment.status === 'completed'
+                            );
+                            
+                            console.log('Completed appointments:', completedAppointments);
+                            
+                            if (completedAppointments.length === 0) {
                                 const option = document.createElement('option');
-                                option.value = appointment.id;
-                                option.textContent = `${appointment.treatment_type} (${appointment.appointment_date})`;
-
-                                // Re-select old appointment if form was submitted
-                                if (appointment.id == oldAppointmentId) {
-                                    option.selected = true;
-                                }
-
+                                option.value = '';
+                                option.textContent = 'No completed appointments available';
                                 appointmentSelect.appendChild(option);
-                            });
+                            } else {
+                                completedAppointments.forEach(appointment => {
+                                    const option = document.createElement('option');
+                                    option.value = appointment.id;
+                                    const formattedDate = new Date(appointment.appointment_date).toLocaleDateString();
+                                    option.textContent = `${appointment.treatment_type} (${formattedDate}) - ₱${appointment.treatment_price || 0}`;
+                                    option.setAttribute('data-price', appointment.treatment_price || 0);
+
+                                    // Re-select old appointment if form was submitted
+                                    if (appointment.id == oldAppointmentId) {
+                                        option.selected = true;
+                                        updateTreatmentPrice(appointment.treatment_price || 0);
+                                    }
+
+                                    appointmentSelect.appendChild(option);
+                                });
+                            }
                         }
                     })
-                    .catch(error => console.error('Error fetching appointments:', error));
+                    .catch(error => {
+                        console.error('Error fetching appointments:', error);
+                        appointmentSelect.innerHTML = '<option value="">Error loading appointments</option>';
+                    });
             }
         }
 
+        function updateTreatmentPrice(price) {
+            treatmentPriceInput.value = price;
+            // Only update total amount if it's not already set by the user
+            if (!totalAmountInput.value) {
+                totalAmountInput.value = price;
+            }
+            calculateChange();
+        }
+
+        function calculateChange() {
+            const totalAmount = parseFloat(totalAmountInput.value) || 0;
+            const amountPaid = parseFloat(amountPaidInput.value) || 0;
+            const change = amountPaid - totalAmount;
+            
+            // Only show positive change values
+            changeAmountInput.value = change > 0 ? change.toFixed(2) : '0.00';
+        }
+
         // If a patient was selected before (old input), fetch their appointments
-        const initialPatientId = patientSelect.value;
-        if (initialPatientId) {
-            fetchAppointments(initialPatientId);
+        if (oldPatientId) {
+            fetchAppointments(oldPatientId);
         }
 
         // Fetch new appointments when patient changes
         patientSelect.addEventListener('change', function () {
-            fetchAppointments(this.value);
+            if (this.value) {
+                fetchAppointments(this.value);
+            } else {
+                appointmentSelect.innerHTML = '<option value="">Select an appointment</option>';
+            }
+            totalAmountInput.value = '';
+            amountPaidInput.value = '';
+            changeAmountInput.value = '0.00';
         });
+
+        // Update total amount when appointment changes
+        appointmentSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const treatmentPrice = selectedOption ? selectedOption.getAttribute('data-price') || 0 : 0;
+            updateTreatmentPrice(treatmentPrice);
+        });
+
+        // Calculate change when amount paid changes
+        amountPaidInput.addEventListener('input', calculateChange);
+        totalAmountInput.addEventListener('input', calculateChange);
     });
 </script>
 @endsection
