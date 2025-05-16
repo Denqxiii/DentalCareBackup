@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Patient;
 use App\Models\TreatmentRecord;
 use App\Models\Appointment;
+use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel; // For exporting to Excel (if you want Excel support)
 use Barryvdh\DomPDF\Facade as PDF; // For generating PDFs (if you want PDF support)
@@ -42,5 +43,21 @@ class ReportController extends Controller
     {
         $patients = Patient::all();
         return Excel::download(new PatientsExport($patients), 'patients_report.xlsx');
+    }
+
+    // Generate a billing report
+    public function billingReport()
+    {
+        $invoices = Invoice::with('payments')->get();
+        $totalRevenue = $invoices->where('status', 'Paid')->sum('total_amount');
+        $outstandingBalance = $invoices->where('status', '!=', 'Paid')->sum('balance');
+
+        return view('reports.billing', compact('invoices', 'totalRevenue', 'outstandingBalance'));
+    }
+
+    public function financial()
+    {
+        // Add your report logic here
+        return view('reports.financial'); 
     }
 }

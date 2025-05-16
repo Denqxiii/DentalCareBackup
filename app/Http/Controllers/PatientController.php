@@ -77,9 +77,10 @@ class PatientController extends Controller
         }
     }
 
+    
     public function index()
     {
-        $patients = Patient::all();
+        $patients = Patient::paginate(10);
         return view('patients.registered_patients', compact('patients'));
     }
 
@@ -107,9 +108,11 @@ class PatientController extends Controller
         return redirect()->route('patients.show', $patient_id)->with('status', 'Patient updated successfully!');
     }
 
-    public function show($patient_id)
+    public function showDetails($patientId)
     {
-        $patient = Patient::with(['medicalHistories', 'treatmentRecords', 'appointments'])->findOrFail($patient_id);
+        $patient = Patient::with(['medicalHistories', 'treatmentRecords', 'appointments'])
+                        ->findOrFail($patientId);
+
         return view('patients.show_details', compact('patient'));
     }
 

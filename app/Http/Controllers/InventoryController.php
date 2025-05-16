@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Supplier;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 
@@ -25,32 +26,32 @@ class InventoryController extends Controller
         return view('inventory.index', compact('inventoryItems'));
     }
 
+    public function create()
+    {
+        $suppliers = Supplier::all(); // Fetch all suppliers from the database
+        return view('inventory.create', compact('suppliers'));
+    }
 
     public function store(Request $request)
     {
         $request->validate([
             'item_name' => 'required|string|max:255',
-            'quantity_in_stock' => 'required|integer',
-            'price_per_unit' => 'required|numeric',
-            'item_type' => 'required|in:consumable,equipment',
-            'threshold' => 'required|integer',
-            'expiration_date' => 'nullable|date',
-            'supplier_name' => 'nullable|string|max:255',
-            'status' => 'required|in:active,expired,out_of_stock',
+            'category' => 'required|string',
+            'quantity_in_stock' => 'required|integer|min:0',
+            'price_per_unit' => 'required|numeric|min:0',
+            'supplier_id' => 'required|exists:suppliers,id', // Ensure the supplier exists in the suppliers table
         ]);
 
+        // Create the inventory item
         Inventory::create([
             'item_name' => $request->item_name,
+            'category' => $request->category,
             'quantity_in_stock' => $request->quantity_in_stock,
             'price_per_unit' => $request->price_per_unit,
-            'item_type' => $request->item_type,
-            'threshold' => $request->threshold,
-            'expiration_date' => $request->expiration_date,
-            'supplier_name' => $request->supplier_name,
-            'status' => $request->status,
+            'supplier_id' => $request->supplier_id,
         ]);
 
-        return redirect()->route('inventory.index')->with('success', 'Item added successfully!');
+        return redirect()->route('inventory.index')->with('success', 'Inventory item added successfully.');
     }
 
     public function edit($id)

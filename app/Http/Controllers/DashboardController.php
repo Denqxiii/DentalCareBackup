@@ -49,34 +49,23 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Recent Activity Notifications
+        // Recent Activity Notifications (replace with dynamic DB queries as needed)
         $recentActivities = [
             ['message' => 'New patient registered: John Doe', 'timestamp' => now()->subMinutes(10)],
             ['message' => 'Appointment completed for Jane Smith', 'timestamp' => now()->subHour()],
-            // Fetch dynamically from DB if needed
         ];
-        
+
         return view('dashboard', compact(
-            'totalPatients', 'patientsPercent',
-            'totalAppointments', 'appointmentsPercent',
-            'completedTreatments', 'completedPercent',
-            'newPatients', 'newPatientsPercent',
+            'totalPatients',
+            'totalAppointments',
+            'completedTreatments',
+            'newPatients',
+            'patientsPercent',
+            'appointmentsPercent',
+            'completedPercent',
+            'newPatientsPercent',
             'upcomingAppointments',
             'recentActivities'
         ));
-    }
-
-    public function index()
-    {
-        // Get upcoming appointments (adjust logic as needed)
-        $upcomingAppointments = Appointment::where('appointment_date', '>=', now())
-            ->orderBy('appointment_date', 'asc')
-            ->take(5) // Or however many you want
-            ->get();
-
-        // Pass other data like activities too if needed
-        $activities = Activity::latest()->take(5)->get();
-
-        return view('dashboard', compact('upcomingAppointments', 'activities'));
     }
 }

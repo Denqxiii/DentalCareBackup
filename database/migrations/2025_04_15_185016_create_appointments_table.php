@@ -11,18 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('appointments', function (Blueprint $table) {
-            $table->id();
-            $table->string('patient_id', 5); // Set patient_id as varchar(5)
-            $table->string('treatment_type');
-            $table->dateTime('appointment_date');
-            $table->enum('status', ['Pending', 'Completed', 'Cancelled']);
-            $table->text('message')->nullable();
-            $table->timestamps();
-
-            // Add foreign key constraint
-            $table->foreign('patient_id')->references('patient_id')->on('patients')->onDelete('cascade');
-        });
+        if (!Schema::hasTable('appointments')) {
+            Schema::create('appointments', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('patient_id')->constrained()->onDelete('cascade');
+                $table->string('treatment_type');
+                $table->date('appointment_date');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

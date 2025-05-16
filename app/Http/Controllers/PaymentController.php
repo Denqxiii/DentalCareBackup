@@ -25,11 +25,6 @@ class PaymentController extends Controller
      */
     public function create(Bill $bill)
     {
-        if ($bill->status === 'paid') {
-            return redirect()->route('bills.show', $bill)
-                ->with('error', 'This bill is already fully paid.');
-        }
-
         return view('payments.create', compact('bill'));
     }
 
@@ -38,35 +33,23 @@ class PaymentController extends Controller
      */
     public function store(Request $request, Bill $bill)
     {
-        if ($bill->status === 'paid') {
-            return redirect()->route('bills.show', $bill)
-                ->with('error', 'This bill is already fully paid.');
-        }
-
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01|max:' . $bill->balance,
-            'payment_method' => 'required|in:cash,credit_card,debit_card,bank_transfer,insurance',
-            'reference_number' => 'nullable|string|max:50',
-            'notes' => 'nullable|string'
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:' . ($bill->total_amount - $bill->paid_amount),
+            'payment_method' => 'required|string',
         ]);
 
-        DB::beginTransaction();
-        try {
-            $payment = Payment::create([
-                'bill_id' => $bill->id,
-                'amount' => $validated['amount'],
-                'payment_method' => $validated['payment_method'],
-                'reference_number' => $validated['reference_number'],
-                'notes' => $validated['notes']
-            ]);
+        Payment::create([
+            'bill_id' => $bill->id,
+            'amount' => $request->amount,
+            'payment_method' => $request->payment_method,
+        ]);
 
-            DB::commit();
-            return redirect()->route('bills.show', $bill)
-                ->with('success', 'Payment recorded successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Error recording payment: ' . $e->getMessage());
-        }
+        $bill->update([
+            'paid_amount' => $bill->paid_amount + $request->amount,
+            'status' => $bill->total_amount == ($bill->paid_amount + $request->amount) ? 'Paid' : 'Partial',
+        ]);
+
+        return redirect()->route('bills.show', $bill)->with('success', 'Payment recorded successfully!');
     }
 
     /**

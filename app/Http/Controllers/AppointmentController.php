@@ -11,23 +11,39 @@ use App\Models\Treatment;
 
 class AppointmentController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        // Retrieve the search input (if any)
-        $search = $request->input('search');
-
-        // Fetch appointments with pagination and apply search filtering
         $appointments = Appointment::with('patient')
-            ->whereHas('patient', function ($query) use ($search) {
-                $query->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('middle_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%");
+            ->latest()
+            ->when(request('search'), function($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->whereHas('patient', function($q) use ($search) {
+                        $q->where('first_name', 'like', '%'.$search.'%')
+                        ->orWhere('last_name', 'like', '%'.$search.'%');
+                    })
+                    ->orWhere('treatment_type', 'like', '%'.$search.'%');
+                });
             })
-            ->orWhere('treatment_type', 'like', "%{$search}%")
-            ->paginate(10); // Paginate with 10 records per page
+            ->when(request('status'), function($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when(request('date'), function($query, $date) {
+                $query->whereDate('appointment_date', $date);
+            })
+            ->paginate(10);
 
-        // Pass appointments data to the view
-        return view('admin.appointments.appointments', compact('appointments'));
+        // Add these stats calculations
+        $stats = [
+            'total' => Appointment::count(),
+            'upcoming' => Appointment::where('appointment_date', '>=', now()->format('Y-m-d'))
+                                ->where('status', '!=', 'Cancelled')
+                                ->where('status', '!=', 'Completed')
+                                ->count(),
+            'completed' => Appointment::where('status', 'Completed')->count(),
+            'cancelled' => Appointment::where('status', 'Cancelled')->count()
+        ];
+
+        return view('admin.appointments.index', compact('appointments', 'stats'));
     }
 
     public function create()
@@ -138,5 +154,31 @@ class AppointmentController extends Controller
                 'message' => 'Error fetching patient details: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function getAppointments($patient_id)
+    {
+        $appointments = Appointment::where('patient_id', $patient_id)->get();
+
+        return response()->json($appointments);
+    }
+
+    // app/Http/Controllers/AppointmentController.php
+    public function updateStatus(Request $request, Appointment $appointment)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:Pending,Completed,Cancelled'
+        ]);
+
+        $appointment->update(['status' => $validated['status']]);
+
+        return redirect()->back()->with('success', 'Status updated successfully');
+    }
+
+    public function show(Appointment $appointment)
+    {
+        return view('admin.appointments.show', [
+            'appointment' => $appointment->load(['patient', 'treatment'])
+        ]);
     }
 }
