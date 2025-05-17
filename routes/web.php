@@ -15,6 +15,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\NoteController;
+use App\Http\Controllers\Admin\PatientController as AdminPatientController;
 
 // Register middleware
 Route::aliasMiddleware('admin', \App\Http\Middleware\AdminMiddleware::class);
@@ -79,61 +81,62 @@ Route::middleware(['auth', 'admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        // Admin routes here
+        // Dashboard
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         
         // Patients
-        Route::resource('patients', \App\Http\Controllers\Admin\PatientController::class);
-        Route::get('patients/{patient}/records', [PatientController::class, 'records'])->name('patients.records');
-        Route::resource('patients.notes', \App\Http\Controllers\Admin\NoteController::class)
-            ->shallow();
-        Route::post('/admin/notes', [NoteController::class, 'store'])->name('admin.notes.store');
+        Route::resource('patients', AdminPatientController::class);
+        Route::get('patients/{patient}/records', [AdminPatientController::class, 'records'])
+            ->name('patients.records');
+            
+        // Notes
+        Route::resource('patients.notes', NoteController::class)->shallow();
+        Route::post('/notes', [NoteController::class, 'store'])->name('notes.store');
+        
+        // Records
         Route::get('records/create', [RecordController::class, 'create'])->name('records.create');
-        Route::get('admin/appointments/{id}/edit', [AppointmentController::class, 'edit'])->name('admin.appointments.edit');
-
-
         
         // Appointments
         Route::resource('appointments', AppointmentController::class);
+        Route::get('appointments/{id}/edit', [AppointmentController::class, 'edit'])
+            ->name('appointments.edit');
         Route::patch('/appointments/{appointment}/complete', [AppointmentController::class, 'complete'])
             ->name('appointments.complete');
-    
         Route::patch('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
             ->name('appointments.cancel');
-            
         
         // Treatments
         Route::resource('treatments', TreatmentController::class);
         
         // Payments
-        Route::prefix('payments')->group(function() {
-            Route::get('/', [PaymentController::class, 'index'])->name('payments.index');
-            Route::get('/create/{appointment}', [PaymentController::class, 'create'])->name('payments.create');
-            Route::post('/', [PaymentController::class, 'store'])->name('payments.store');
-            Route::get('/{payment}/receipt', [PaymentController::class, 'receipt'])->name('payments.receipt');
+        Route::prefix('payments')->name('payments.')->group(function() {
+            Route::get('/', [PaymentController::class, 'index'])->name('index');
+            Route::get('/create/{appointment}', [PaymentController::class, 'create'])->name('create');
+            Route::post('/', [PaymentController::class, 'store'])->name('store');
+            Route::get('/{payment}/receipt', [PaymentController::class, 'receipt'])->name('receipt');
         });
         
         // Prescriptions
         Route::resource('prescriptions', PrescriptionController::class);
         
         // Reports
-        Route::prefix('reports')->group(function() {
-            Route::get('/', [ReportController::class, 'index'])->name('reports.index');
-            Route::get('/financial', [ReportController::class, 'financial'])->name('reports.financial');
-            Route::get('/appointments', [ReportController::class, 'appointments'])->name('reports.appointments');
+        Route::prefix('reports')->name('reports.')->group(function() {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('/financial', [ReportController::class, 'financial'])->name('financial');
+            Route::get('/appointments', [ReportController::class, 'appointments'])->name('appointments');
         });
         
-        // Inventory Routes
-        Route::prefix('inventory')->group(function() {
-            Route::get('/', [InventoryController::class, 'index'])->name('inventory.index');
-            Route::get('/create', [InventoryController::class, 'create'])->name('inventory.create');
-            Route::post('/', [InventoryController::class, 'store'])->name('inventory.store');
-            Route::get('/{item}/edit', [InventoryController::class, 'edit'])->name('inventory.edit');
-            Route::put('/{item}', [InventoryController::class, 'update'])->name('inventory.update');
+        // Inventory
+        Route::prefix('inventory')->name('inventory.')->group(function() {
+            Route::get('/', [InventoryController::class, 'index'])->name('index');
+            Route::get('/create', [InventoryController::class, 'create'])->name('create');
+            Route::post('/', [InventoryController::class, 'store'])->name('store');
+            Route::get('/{item}/edit', [InventoryController::class, 'edit'])->name('edit');
+            Route::put('/{item}', [InventoryController::class, 'update'])->name('update');
             
             // Stock Movements
-            Route::get('/{item}/movements', [InventoryController::class, 'movements'])->name('inventory.movements');
-            Route::get('/movements/create', [InventoryController::class, 'createMovement'])->name('inventory.movements.create');
-            Route::post('/movements', [InventoryController::class, 'storeMovement'])->name('inventory.movements.store');
+            Route::get('/{item}/movements', [InventoryController::class, 'movements'])->name('movements');
+            Route::get('/movements/create', [InventoryController::class, 'createMovement'])->name('movements.create');
+            Route::post('/movements', [InventoryController::class, 'storeMovement'])->name('movements.store');
         });
     });

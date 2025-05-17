@@ -18,7 +18,7 @@ class PrescriptionController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('prescriptions.index', compact('prescriptions'));
+        return view('admin.prescription.index', compact('prescriptions'));
     }
 
     /**
@@ -26,10 +26,10 @@ class PrescriptionController extends Controller
      */
     public function create()
     {
-        $patients = Patient::all();
-        $doctors = User::where('role', 'doctor')->get(); // Adjust based on your user roles
-        
-        return view('prescriptions.create', compact('patients', 'doctors'));
+        $patients = Patient::all();  // Fetch all patients
+        $doctors = User::where('role', 'doctor')->get();
+
+        return view('admin.prescription.create', compact('patients', 'doctors'));
     }
 
     /**
@@ -38,32 +38,16 @@ class PrescriptionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'patient_id' => 'required|exists:patients,id',
-            'doctor_id' => 'required|exists:users,id',
-            'diagnosis' => 'required|string',
-            'instructions' => 'nullable|string',
-            'medications' => 'required|array',
-            'medications.*.name' => 'required|string',
-            'medications.*.dosage' => 'required|string',
-            'medications.*.frequency' => 'required|string',
-            'medications.*.duration' => 'required|string'
+        'patient_id' => 'required|exists:patients,id',
+        'doctor_id' => 'required|exists:users,id',
+        'medication' => 'required|string',
+        'dosage' => 'required|string',
+        'notes' => 'nullable|string',
         ]);
 
-        // Create prescription
-        $prescription = Prescription::create([
-            'patient_id' => $validated['patient_id'],
-            'doctor_id' => $validated['doctor_id'],
-            'diagnosis' => $validated['diagnosis'],
-            'instructions' => $validated['instructions']
-        ]);
+        Prescription::create($validated);
 
-        // Add medications
-        foreach ($validated['medications'] as $medication) {
-            $prescription->medications()->create($medication);
-        }
-
-        return redirect()->route('prescriptions.show', $prescription)
-            ->with('success', 'Prescription created successfully!');
+        return redirect()->route('admin.prescription.index')->with('success', 'Prescription created successfully.');
     }
 
     /**

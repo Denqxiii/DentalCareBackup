@@ -1,104 +1,56 @@
-@extends('admin.layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Create Prescription')
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h5>New Prescription</h5>
+        <h5>Create New Prescription</h5>
     </div>
     <div class="card-body">
         <form action="{{ route('admin.prescriptions.store') }}" method="POST">
             @csrf
+            
             <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Patient</label>
-                        <select name="patient_id" class="form-control" required>
-                            @foreach($patients as $patient)
-                            <option value="{{ $patient->id }}">{{ $patient->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div class="col-md-6 mb-3">
+                    <label for="patient_id" class="form-label">Patient</label>
+                    <select name="patient_id" id="patient_id" class="form-select" required>
+                        <option value="">Select Patient</option>
+                        @foreach($patients as $patient)
+                        <option value="{{ $patient->id }}">{{ $patient->first_name }} {{ $patient->last_name }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Dentist</label>
-                        <select name="dentist_id" class="form-control" required>
-                            @foreach($dentists as $dentist)
-                            <option value="{{ $dentist->id }}">Dr. {{ $dentist->last_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div id="medication-container">
-                <div class="medication-item row mb-3">
-                    <div class="col-md-5">
-                        <input type="text" name="medications[0][name]" 
-                               class="form-control" placeholder="Medication" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" name="medications[0][dosage]" 
-                               class="form-control" placeholder="Dosage" required>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="text" name="medications[0][frequency]" 
-                               class="form-control" placeholder="Frequency" required>
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-danger remove-medication">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="doctor_id" class="form-label">Doctor</label>
+                    <select name="doctor_id" id="doctor_id" class="form-select" required>
+                        <option value="">Select Doctor</option>
+                        @foreach($doctors as $doctor)
+                        <option value="{{ $doctor->id }}">{{ $doctor->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
-
-            <button type="button" id="add-medication" class="btn btn-secondary mb-3">
-                <i class="fas fa-plus"></i> Add Medication
-            </button>
-
-            <div class="form-group">
-                <label>Instructions</label>
-                <textarea name="instructions" class="form-control" rows="3"></textarea>
+            
+            <div class="mb-3">
+                <label for="medication" class="form-label">Medication</label>
+                <textarea name="medication" id="medication" rows="3" class="form-control" required></textarea>
             </div>
-
+            
+            <div class="mb-3">
+                <label for="dosage" class="form-label">Dosage Instructions</label>
+                <textarea name="dosage" id="dosage" rows="3" class="form-control" required></textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label for="notes" class="form-label">Notes</label>
+                <textarea name="notes" id="notes" rows="2" class="form-control"></textarea>
+            </div>
+            
             <button type="submit" class="btn btn-primary">Save Prescription</button>
+            <a href="{{ route('admin.prescriptions.index') }}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
 </div>
-
-<script>
-    let medCounter = 1;
-    $('#add-medication').click(function() {
-        const newItem = `
-        <div class="medication-item row mb-3">
-            <div class="col-md-5">
-                <input type="text" name="medications[${medCounter}][name]" 
-                       class="form-control" placeholder="Medication" required>
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="medications[${medCounter}][dosage]" 
-                       class="form-control" placeholder="Dosage" required>
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="medications[${medCounter}][frequency]" 
-                       class="form-control" placeholder="Frequency" required>
-            </div>
-            <div class="col-md-1">
-                <button type="button" class="btn btn-danger remove-medication">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        `;
-        $('#medication-container').append(newItem);
-        medCounter++;
-    });
-
-    $(document).on('click', '.remove-medication', function() {
-        $(this).closest('.medication-item').remove();
-    });
-</script>
 @endsection
