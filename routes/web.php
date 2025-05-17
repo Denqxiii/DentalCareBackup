@@ -7,13 +7,14 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\TreatmentController;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\RecordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Admin\PaymentController;
 
 // Register middleware
 Route::aliasMiddleware('admin', \App\Http\Middleware\AdminMiddleware::class);
@@ -82,14 +83,24 @@ Route::middleware(['auth', 'admin'])
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         
         // Patients
-        Route::resource('patients', PatientController::class)->except(['create', 'store']);
+        Route::resource('patients', \App\Http\Controllers\Admin\PatientController::class);
+        Route::get('patients/{patient}/records', [PatientController::class, 'records'])->name('patients.records');
+        Route::resource('patients.notes', \App\Http\Controllers\Admin\NoteController::class)
+            ->shallow();
+        Route::post('/admin/notes', [NoteController::class, 'store'])->name('admin.notes.store');
+        Route::get('records/create', [RecordController::class, 'create'])->name('records.create');
+        Route::get('admin/appointments/{id}/edit', [AppointmentController::class, 'edit'])->name('admin.appointments.edit');
+
+
         
         // Appointments
         Route::resource('appointments', AppointmentController::class);
-        Route::patch('/appointments/{appointment}/complete', [AppointmentController::class, 'markComplete'])
+        Route::patch('/appointments/{appointment}/complete', [AppointmentController::class, 'complete'])
             ->name('appointments.complete');
-        Route::patch('/appointments/{appointment}/cancel', [AppointmentController::class, 'markCancel'])
+    
+        Route::patch('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
             ->name('appointments.cancel');
+            
         
         // Treatments
         Route::resource('treatments', TreatmentController::class);

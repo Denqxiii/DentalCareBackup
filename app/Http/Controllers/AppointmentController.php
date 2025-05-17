@@ -112,7 +112,7 @@ class AppointmentController extends Controller
         return view('admin.appointments.create', compact('patients', 'treatments'));
     }
 
-    public function complete()
+    public function markascomplete()
     {
         $appointments = Appointment::with(['patient', 'treatment'])
                                 ->where('status', 'completed')
@@ -122,17 +122,38 @@ class AppointmentController extends Controller
         return view('admin.appointments.completed', compact('appointments'));
     }
 
-    public function markComplete(Appointment $appointment)
+    public function complete(Appointment $appointment)
     {
-        $appointment->update(['status' => 'completed']);
+        $appointment->update(['status' => 'Completed']);
         
-        return back()->with('success', 'Appointment marked as completed.');
+        return redirect()->back()
+            ->with('success', 'Appointment marked as completed successfully');
     }
 
-    public function markCancel(Appointment $appointment)
+    public function cancel(Appointment $appointment)
     {
-        $appointment->update(['status' => 'canceled']);
+        $appointment->update(['status' => 'Cancelled']);
         
-        return back()->with('success', 'Appointment has been canceled.');
+        return redirect()->back()
+            ->with('success', 'Appointment cancelled successfully');
     }
+
+    public function edit($id)
+    {
+        // Find the appointment by id or fail
+        $appointment = Appointment::findOrFail($id);
+
+        // Return the edit view with the appointment data
+        return view('admin.appointments.edit', compact('appointment'));
+    }
+
+    public function markComplete($id)
+    {
+        $appointment = Appointment::findOrFail($id);
+        $appointment->status = 'Completed';
+        $appointment->save();
+
+        return redirect()->back()->with('success', 'Appointment marked as completed.');
+    }
+
 }

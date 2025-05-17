@@ -15,7 +15,7 @@
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
-            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse" style="height: 1000px;">
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
                 <div class="position-sticky pt-3">
                     <div class="text-center mb-4">
                         <h4 class="text-white">Dental Care</h4>
@@ -35,11 +35,6 @@
                         <li class="nav-item">
                             <a class="nav-link {{ request()->is('admin/patients*') ? 'active' : '' }}" href="{{ route('admin.patients.index') }}">
                                 <i class="fas fa-user-injured me-2"></i> Patients
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->is('admin/treatments*') ? 'active' : '' }}" href="{{ route('admin.treatments.index') }}">
-                                <i class="fas fa-tooth me-2"></i> Treatments
                             </a>
                         </li>
                         <li class="nav-item">

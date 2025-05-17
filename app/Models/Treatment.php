@@ -37,4 +37,8 @@ class Treatment extends Model
         return $query->where('is_active', true); // or `->where('status', 'active')` depending on your setup
     }
 
+    public function treatmentRecords() 
+    {
+        return $this->hasMany(TreatmentRecord::class, 'treatment_id', 'id');
+    }
 }

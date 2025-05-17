@@ -3,6 +3,15 @@
 @section('title', 'Schedule Appointment')
 
 @section('content')
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mt-3 mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('admin.appointments.index') }}">Appointment</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Schedule Appointment</li>
+        </ol>
+    </nav>
+
 <div class="card">
     <div class="card-header">
         <h5>Schedule New Appointment</h5>

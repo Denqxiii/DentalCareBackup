@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Payments')
 
@@ -20,20 +20,24 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($payments as $payment)
-                <tr>
-                    <td>{{ $payment->created_at->format('m/d/Y') }}</td>
-                    <td>{{ $payment->invoice->patient->name }}</td>
-                    <td>${{ number_format($payment->amount, 2) }}</td>
-                    <td>{{ ucfirst($payment->method) }}</td>
-                    <td>#{{ $payment->invoice->invoice_number }}</td>
-                    <td>
-                        <a href="#" class="btn btn-sm btn-info">
-                            <i class="fas fa-receipt"></i> Receipt
-                        </a>
-                    </td>
-                </tr>
-                @endforeach
+                @forelse($appointments as $appointment)
+                    <tr>
+                        <td>{{ $appointment->completed_at ? $appointment->completed_at->format('m/d/Y') : $appointment->updated_at->format('m/d/Y') }}</td>
+                        <td>{{ $appointment->patient->name ?? 'No patient' }}</td>
+                        <td>${{ number_format($appointment->invoice->amount_due ?? 0, 2) }}</td>
+                        <td>Pending Payment</td>
+                        <td>#{{ $appointment->invoice->invoice_number ?? 'N/A' }}</td>
+                        <td>
+                            <a href="{{ route('admin.payments.create', ['appointment' => $appointment->id]) }}" class="btn btn-sm btn-primary">
+                                Pay Now
+                            </a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center">No unpaid completed appointments found.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

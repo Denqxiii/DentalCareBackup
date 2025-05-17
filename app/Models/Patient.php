@@ -51,4 +51,25 @@ class Patient extends Model
         
         return $prefix . $date . '-' . $random;
     }
+
+    public function getRouteKeyName()
+    {
+        return 'patient_id';  // Use patient_id for route model binding
+    }
+
+    public function treatmentRecords() 
+    {
+    return $this->hasMany(TreatmentRecord::class, 'patient_id', 'patient_id');
+    }
+
+    public function treatments() {
+        return $this->hasManyThrough(
+            Treatment::class,
+            TreatmentRecord::class,
+            'patient_id',     // Foreign key on treatment_records table
+            'id',             // Foreign key on treatments table (treatments.id)
+            'patient_id',     // Local key on patients table
+            'treatment_id'    // Local key on treatment_records table
+        );
+    }
 }

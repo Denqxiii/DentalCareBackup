@@ -4,6 +4,14 @@
 
 @section('content')
 <div class="container-fluid px-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mt-3 mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Appointments</li>
+        </ol>
+    </nav>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="fs-4 fw-bold text-primary">Appointment Management</h1>
         <a href="{{ route('admin.appointments.create') }}" class="btn btn-primary">
@@ -128,17 +136,21 @@
                                 <td class="text-end pe-3">
                                     <div class="btn-group">
                                         @if($appt->status == 'Pending')
-                                            <button type="button" class="btn btn-sm btn-success" 
-                                                    onclick="confirmStatusChange('{{ route('admin.appointments.complete', $appt->id) }}', 'complete')">
-                                                <i class="bi bi-check-lg me-1"></i>Complete
-                                            </button>
+                                            <form action="{{ route('admin.appointments.complete', $appt->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Mark as completed?')">
+                                                    <i class="bi bi-check-lg me-1"></i>Complete
+                                                </button>
+                                            </form>
                                             
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    onclick="confirmStatusChange('{{ route('admin.appointments.cancel', $appt->id) }}', 'cancel')">
-                                                <i class="bi bi-x-lg me-1"></i>Cancel
-                                            </button>
-                                        @else
-                                            <span class="text-muted">No actions available</span>
+                                            <form action="{{ route('admin.appointments.cancel', $appt->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel appointment?')">
+                                                    <i class="bi bi-x-lg me-1"></i>Cancel
+                                                </button>
+                                            </form>
                                         @endif
                                     </div>
                                 </td>

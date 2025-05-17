@@ -24,7 +24,7 @@ class Appointment extends Model
 
     public function patient()
     {
-        return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+        return $this->belongsTo(Patient::class, 'patient_patient_id', 'patient_id');
     }
 
     public function treatment()
@@ -40,5 +40,10 @@ class Appointment extends Model
     public function getTimeAttribute()
     {
         return $this->appointment_time;
+    }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
     }
 }

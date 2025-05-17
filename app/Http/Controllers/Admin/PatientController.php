@@ -2,37 +2,43 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PatientRequest;
 use App\Models\Patient;
+use App\Models\Appointment;
+use App\Models\Treatment;
 use App\Repositories\PatientRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;  
 
-class PatientController extends BaseController
+class PatientController extends Controller
 {
     private $patientRepository;
 
-    public function __construct()
+    public function __construct(PatientRepository $patientRepository)
     {
-        parent::__construct();
-        $this->patientRepository = app(PatientRepository::class);
+        $this->middleware('auth');
+        $this->middleware('admin')->only(['create', 'store', 'edit', 'update', 'destroy']);
+        
+        $this->patientRepository = $patientRepository;
     }
 
     public function index()
     {
-        $this->title = "Patient Management";
+        $appointmentCounts = Appointment::select('patient_id', DB::raw('count(*) as total'))
+            ->groupBy('patient_id')
+            ->pluck('total', 'patient_id');  // returns [patient_id => count] associative array
+
         $patients = $this->patientRepository->getAllWithPaginate(15);
         
-        $this->content = view('admin.patients.index', 
-            compact('patients'))->render();
-            
-        return $this->renderOutput();
+        return view('admin.patients.index', compact('patients', 'appointmentCounts')); // <-- add appointmentCounts here
     }
+
 
     public function create()
     {
-        $this->title = "Add New Patient";
-        $this->content = view('admin.patients.create')->render();
-        return $this->renderOutput();
+        $patients = $this->patientRepository->getAllWithPaginate(15);
+        return view('admin.patients.create', compact('patients'));
     }
 
     public function store(PatientRequest $request)
@@ -49,17 +55,12 @@ class PatientController extends BaseController
             ->with(['success' => 'Patient created successfully']);
     }
 
-    public function show($id)
+    public function show(Patient $patient)  // Implicit model binding will now work
     {
-        $patient = $this->patientRepository->getEdit($id);
         $appointments = $patient->appointments()->latest()->paginate(5);
         $treatments = $patient->treatments()->latest()->paginate(5);
         
-        $this->title = "Patient: " . $patient->full_name;
-        $this->content = view('admin.patients.show', 
-            compact('patient', 'appointments', 'treatments'))->render();
-            
-        return $this->renderOutput();
+        return view('admin.patients.show', compact('patient', 'appointments', 'treatments'));
     }
 
     public function edit($id)
@@ -101,5 +102,27 @@ class PatientController extends BaseController
         $patients = $this->patientRepository->search($query);
         
         return view('admin.patients._search_results', compact('patients'));
+    }
+
+    protected function renderOutput()
+    {
+        return view('layouts.admin', [
+            'title' => $this->title ?? 'Admin Panel',
+            'content' => $this->content ?? '',
+        ]);
+    }
+
+    public function getEdit($patientId)
+    {
+        return Patient::where('patient_id', $patientId)->firstOrFail();
+    }
+
+    public function records($patientId)
+    {
+        $patient = Patient::where('patient_id', $patientId)->firstOrFail();
+        // Fetch related medical records or appointments as needed
+        $appointments = $patient->appointments()->paginate(10);
+        
+        return view('admin.patients.records', compact('patient', 'appointments'));
     }
 }

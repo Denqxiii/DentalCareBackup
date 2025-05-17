@@ -54,4 +54,14 @@ class Payment extends Model
     {
         return $this->payment_notes;
     }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
+    public function appointment()
+    {
+        return $this->belongsTo(Appointment::class);
+    }
 }

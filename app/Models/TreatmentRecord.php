@@ -14,8 +14,11 @@ class TreatmentRecord extends Model
     /**
      * Define the relationship with the Patient model.
      */
-    public function patient()
-    {
-        return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+    public function patient() {
+    return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+    }
+
+    public function treatment() {
+        return $this->belongsTo(Treatment::class, 'treatment_id', 'id');
     }
 }

@@ -43,6 +43,7 @@ class Invoice extends Model
         return $this->belongsTo(Patient::class);
     }
 
+
     /**
      * Get the appointment associated with the invoice
      */
