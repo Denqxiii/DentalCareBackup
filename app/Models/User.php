@@ -45,4 +45,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function isPatient()
+    {
+        return $this->role === 'patient'; // Adjust based on your role system
+    }
+
+    public function patient()
+    {
+        return $this->hasOne(Patient::class);
+    }
+    
 }

@@ -65,6 +65,31 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    input:disabled, select:disabled, textarea:disabled {
+        background-color: #f3f4f6;
+        cursor: not-allowed;
+    }
+
+    .loading-pulse {
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+    }
+
+    .is-invalid {
+        border-color: #EF4444 !important;
+    }
+
+    .invalid-feedback {
+        color: #EF4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
   </style>
 </head>
 <body>
@@ -100,9 +125,16 @@
         </p>
         <form class="space-y-5" id="appointment-form">
           @csrf  
-          <input type="text" id="patient-id" name="patient_id" placeholder="Enter Patient ID (Sent via Email)" class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" onblur="fetchPatientDetails()">
-          <input type="text" id="full-name" name="full_name" placeholder="Full Name" class="w-full p-3 border rounded-lg bg-gray-100" readonly>
-          <input type="tel" id="phone-number" name="phone_number" placeholder="Phone Number" class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" required>
+          <div>
+            <input type="text" id="patient-id" name="patient_id" placeholder="Enter Patient ID (Sent via Email)" 
+                   class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" 
+                   onblur="fetchPatientDetails()">
+            <div id="patient-id-error" class="invalid-feedback hidden"></div>
+          </div>
+          <input type="text" id="patient_name" name="patient_name" placeholder="Full Name" 
+                 class="w-full p-3 border rounded-lg bg-gray-100" readonly>
+          <input type="tel" id="patient_phone" name="patient_phone" placeholder="Phone Number" 
+                 class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" required>
           <!-- Gender Selection -->
           <div class="flex gap-4">
             <label class="flex items-center">
@@ -116,16 +148,23 @@
             </label>
           </div>
           <div class="flex gap-4">
-            <select name="treatment_id" id="treatment_id" class="w-1/2 p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" required>
-              <option value="" disabled selected>Select Treatment</option>
-              @foreach($treatments as $treatment)
-                <option value="{{ $treatment->id }}">{{ $treatment->name }}</option>
-              @endforeach
-            </select>
-            <input type="date" name="appointment_date" id="appointment_date" class="w-1/2 p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" required>
+            <div class="w-1/2">
+              <select name="treatment_id" id="treatment_id" 
+                      class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" required>
+                <option value="" disabled selected>Select Treatment</option>
+                @foreach($treatments as $treatment)
+                  <option value="{{ $treatment->id }}">{{ $treatment->name }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="w-1/2">
+              <input type="date" name="appointment_date" id="appointment_date" 
+                     class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" required>
+            </div>
           </div>
           <!-- Time Selection -->
-          <select name="appointment_time" id="appointment_time" class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" required>
+          <select name="appointment_time" id="appointment_time" 
+                  class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition" required>
             <option value="" disabled selected>Select Time</option>
             <option value="09:00">9:00 AM</option>
             <option value="10:00">10:00 AM</option>
@@ -138,8 +177,11 @@
             <option value="17:00">5:00 PM</option>
             <option value="18:00">6:00 PM</option>
           </select>
-          <textarea name="message" placeholder="Write message" rows="4" class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition"></textarea>
-          <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-3 rounded-xl shadow-lg text-lg transition transform hover:scale-105">Book Appointment</button>
+          <textarea name="message" placeholder="Write message" rows="4" 
+                    class="w-full p-3 border rounded-lg bg-gray-100 focus:bg-blue-50 focus:border-blue-400 transition"></textarea>
+          <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-3 rounded-xl shadow-lg text-lg transition transform hover:scale-105">
+            Book Appointment
+          </button>
           <p class="text-left text-sm text-gray-400 mt-4">© 2025 Dental Care – All Rights Reserved.</p>
         </form>
       </div>
@@ -156,12 +198,27 @@
   <div id="registration-modal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden z-50" onclick="if(event.target === this) closeRegistrationModal()">
     <div class="bg-white p-6 rounded-md w-96" onclick="event.stopPropagation()">
       <h2 class="text-2xl font-bold mb-4">Register as a New Patient</h2>
-      <form id="registration-form" action="{{ route('patients.store') }}" method="POST">
+      <form id="registration-form" action="{{ route('patients.register') }}" method="POST">
         @csrf
-        <input type="text" name="first_name" placeholder="Enter First Name" class="w-full p-3 border rounded-md bg-gray-100 mb-4" required>
-        <input type="text" name="middle_name" placeholder="Enter Middle Name (Optional)" class="w-full p-3 border rounded-md bg-gray-100 mb-4">
-        <input type="text" name="last_name" placeholder="Enter Last Name" class="w-full p-3 border rounded-md bg-gray-100 mb-4" required>
-        <input type="tel" name="phone" placeholder="Enter Phone Number" class="w-full p-3 border rounded-md bg-gray-100 mb-4" required>
+        <div class="mb-4">
+          <input type="text" name="first_name" placeholder="Enter First Name" 
+                 class="w-full p-3 border rounded-md bg-gray-100" required>
+          <div class="invalid-feedback hidden"></div>
+        </div>
+        <div class="mb-4">
+          <input type="text" name="middle_name" placeholder="Enter Middle Name (Optional)" 
+                 class="w-full p-3 border rounded-md bg-gray-100">
+        </div>
+        <div class="mb-4">
+          <input type="text" name="last_name" placeholder="Enter Last Name" 
+                 class="w-full p-3 border rounded-md bg-gray-100" required>
+          <div class="invalid-feedback hidden"></div>
+        </div>
+        <div class="mb-4">
+          <input type="tel" name="phone" placeholder="Enter Phone Number" 
+                 class="w-full p-3 border rounded-md bg-gray-100" required>
+          <div class="invalid-feedback hidden"></div>
+        </div>
         <!-- Gender Selection -->
         <div class="flex gap-4 mb-4">
           <label class="flex items-center">
@@ -174,10 +231,24 @@
             <input type="radio" name="gender" value="Other" class="mr-2" required> Other
           </label>
         </div>
-        <input type="email" name="email" placeholder="Enter Email" class="w-full p-3 border rounded-md bg-gray-100 mb-4" required>
-        <input type="date" name="birth_date" placeholder="Enter Birth Date" class="w-full p-3 border rounded-md bg-gray-100 mb-4" required>
-        <input type="text" name="address" placeholder="Enter Address" class="w-full p-3 border rounded-md bg-gray-100 mb-4" required>
-        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-md">Register</button>
+        <div class="mb-4">
+          <input type="email" name="email" placeholder="Enter Email" 
+                 class="w-full p-3 border rounded-md bg-gray-100" required>
+          <div class="invalid-feedback hidden"></div>
+        </div>
+        <div class="mb-4">
+          <input type="date" name="birth_date" placeholder="Enter Birth Date" 
+                 class="w-full p-3 border rounded-md bg-gray-100" required>
+          <div class="invalid-feedback hidden"></div>
+        </div>
+        <div class="mb-4">
+          <input type="text" name="address" placeholder="Enter Address" 
+                 class="w-full p-3 border rounded-md bg-gray-100" required>
+          <div class="invalid-feedback hidden"></div>
+        </div>
+        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-md">
+          Register
+        </button>
       </form>
       <button onclick="closeRegistrationModal()" class="w-full text-center text-sm text-gray-400 mt-4">Cancel</button>
     </div>
@@ -187,69 +258,17 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    function fetchPatientDetails() {
-      const patientId = document.getElementById('patient-id').value;
-      if (!patientId) return;
-
-      const fullNameInput = document.getElementById('full-name');
-      fullNameInput.value = 'Loading...';
-
-      console.log('Fetching patient details for ID:', patientId);
-
-      fetch(`/api/patients/${patientId}`, {
-          headers: {
-              'Accept': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          }
-      })
-      .then(response => {
-        console.log('Response status:', response.status);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Received data:', data);
-        
-        if (data && data.patient) {
-          const patient = data.patient;
-          console.log('Patient data:', patient);
-          
-          // Update form fields
-          fullNameInput.value = `${patient.first_name} ${patient.middle_name || ''} ${patient.last_name}`.trim();
-          document.getElementById('phone-number').value = patient.phone || '';
-          
-          // Enable and update gender selection
-          document.querySelectorAll('input[name="gender"]').forEach(radio => {
-            radio.disabled = false;
-            if (radio.value === patient.gender) {
-              radio.checked = true;
-            }
-          });
-          
-          showToast('Patient details loaded successfully', 'success');
-        } else {
-          console.error('Patient data not found in response:', data);
-          showToast('Patient not found!', 'error');
-          fullNameInput.value = '';
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching patient details:', error);
-        showToast('Error fetching patient details. Please try again.', 'error');
-        fullNameInput.value = '';
-      });
-    }
     // Function to open registration modal
     function openRegistrationModal() {
       document.getElementById('registration-modal').style.display = 'flex';
     }
+    
     // Function to close registration modal
     function closeRegistrationModal() {
       document.getElementById('registration-modal').style.display = 'none';
     }
 
+    // Show toast notification
     function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
         toast.textContent = message;
@@ -261,142 +280,224 @@
         }, 5000);
     }
 
+    // Show loading overlay
     function showLoader() {
       document.getElementById('loading-overlay').style.display = 'flex';
     }
+    
+    // Hide loading overlay
     function hideLoader() {
       document.getElementById('loading-overlay').style.display = 'none';
     }
 
+    // Reset patient fields
+    function resetPatientFields() {
+        document.getElementById('patient_name').value = '';
+        document.getElementById('patient_phone').value = '';
+        document.querySelectorAll('input[name="gender"]').forEach(radio => {
+            radio.checked = false;
+            radio.disabled = true;
+        });
+    }
+
+    // Fetch patient details when ID is entered
+    async function fetchPatientDetails() {
+        const patientId = document.getElementById('patient-id').value.trim();
+        if (!patientId) return;
+
+        // Show loading state
+        const patientNameField = document.getElementById('patient_name');
+        patientNameField.value = 'Loading...';
+        patientNameField.classList.add('loading-pulse');
+        
+        // Disable fields while loading
+        document.getElementById('patient_phone').disabled = true;
+        document.querySelectorAll('input[name="gender"]').forEach(radio => {
+            radio.disabled = true;
+        });
+
+        try {
+            const response = await fetch(`/api/patient/${patientId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+
+            if (!response.ok) throw new Error('Patient not found');
+            
+            const data = await response.json();
+            
+            if (data.success && data.patient) {
+                // Fill the form fields
+                document.getElementById('patient_name').value = data.patient.full_name;
+                document.getElementById('patient_phone').value = data.patient.phone;
+                
+                // Enable and set gender radio buttons
+                document.querySelectorAll('input[name="gender"]').forEach(radio => {
+                    radio.disabled = false;
+                    if (radio.value === data.patient.gender) {
+                        radio.checked = true;
+                    }
+                });
+                
+                showToast('Patient details loaded successfully', 'success');
+            } else {
+                throw new Error('Invalid patient data format');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast(error.message || 'Error loading patient details', 'error');
+            resetPatientFields();
+        } finally {
+            patientNameField.classList.remove('loading-pulse');
+            document.getElementById('patient_phone').disabled = false;
+        }
+    }
+
+    // Handle appointment form submission
     document.getElementById('appointment-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-      // Validate required fields
-      const requiredFields = {
-          'patient_id': 'Patient ID',
-          'treatment_id': 'Treatment',
-          'appointment_date': 'Appointment Date',
-          'appointment_time': 'Appointment Time',
-          'phone_number': 'Phone Number',
-          'gender': 'Gender'
-      };
-      
-      const missingFields = [];
-      for (const [field, name] of Object.entries(requiredFields)) {
-          if (!this.elements[field]?.value) {
-              missingFields.push(name);
-          }
-      }
-      
-      if (missingFields.length > 0) {
-          showToast(`Please fill in: ${missingFields.join(', ')}`, 'error');
-          return;
-      }
+        e.preventDefault();
+        console.log("Form submission initiated"); // Debug log
+        
+        // Simple validation
+        const patientId = document.getElementById('patient-id').value;
+        if (!patientId) {
+            showToast('Patient ID is required', 'error');
+            return;
+        }
 
-      // Prepare form data
-      const formData = {
-          patient_id: this.elements.patient_id.value,
-          treatment_id: this.elements.treatment_id.value,
-          appointment_date: this.elements.appointment_date.value,
-          appointment_time: this.elements.appointment_time.value,
-          phone_number: this.elements.phone_number.value,
-          gender: document.querySelector('input[name="gender"]:checked')?.value,
-          message: this.elements.message?.value || ''
-      };
+        // Prepare form data - match EXACTLY with your backend expectations
+        const formData = {
+            patient_id: patientId,
+            patient_name: document.getElementById('patient_name').value,
+            patient_phone: document.getElementById('patient_phone').value,
+            treatment_id: document.getElementById('treatment_id').value,
+            appointment_date: document.getElementById('appointment_date').value,
+            appointment_time: document.getElementById('appointment_time').value,
+            gender: document.querySelector('input[name="gender"]:checked')?.value,
+            message: document.querySelector('[name="message"]').value || ''
+        };
 
-      try {
-          showLoader();
-          const response = await axios.post('/book-appointment', formData, {
-              headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-              }
-          });
-          
-          if (response.data.success) {
-              showToast('Appointment booked successfully!', 'success');
-              this.reset();
-          } else {
-              showToast(response.data.message, 'error');
-          }
-      } catch (error) {
-          console.error('Error:', error);
-          const errorMsg = error.response?.data?.message || 
-                          error.response?.data?.errors?.join('\n') || 
-                          'Booking failed. Please try again.';
-          showToast(errorMsg, 'error');
-      } finally {
-          hideLoader();
-      }
-  });
+        console.log("Form data to be submitted:", formData); // Debug log
 
+        try {
+            showLoader();
+            console.log("Sending request to server..."); // Debug log
+            
+            const response = await axios.post('/book-appointment', formData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+            
+            console.log("Server response:", response.data); // Debug log
+            
+            if (response.data.success) {
+                showToast('Appointment booked successfully!', 'success');
+                this.reset();
+                resetPatientFields();
+            } else {
+                showToast(response.data.message || 'Booking failed', 'error');
+            }
+        } catch (error) {
+            console.error("Full error details:", error); // Debug log
+            console.error("Error response data:", error.response?.data); // Debug log
+            
+            let errorMsg = 'Booking failed. Please try again.';
+            if (error.response?.data?.message) {
+                errorMsg = error.response.data.message;
+            } else if (error.response?.data?.errors) {
+                errorMsg = Object.values(error.response.data.errors).flat().join('\n');
+            }
+            
+            showToast(errorMsg, 'error');
+        } finally {
+            hideLoader();
+        }
+    });
+
+    // Handle registration form submission
     document.getElementById('registration-form').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      // Collect form data
-      const formData = {
-          first_name: this.elements.first_name.value.trim(),
-          middle_name: this.elements.middle_name?.value.trim() || null,
-          last_name: this.elements.last_name.value.trim(),
-          email: this.elements.email.value.trim(),
-          phone: this.elements.phone.value.trim(),
-          gender: document.querySelector('input[name="gender"]:checked')?.value,
-          birth_date: this.elements.birth_date.value,
-          address: this.elements.address.value.trim()
-      };
+        e.preventDefault();
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+            <span class="flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Registering...
+            </span>
+        `;
 
-      try {
-          // Show loading state
-          const submitBtn = this.querySelector('button[type="submit"]');
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = 'Registering...';
+        try {
+            const formData = new FormData(this);
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            });
 
-          const response = await axios.post('/patients', formData, {
-              headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-              }
-          });
-          
-          if (response.data.status === "success") {
-              // Show success message
-              showToast('Patient registered successfully!', 'success');
-              
-              // Close modal
-              closeRegistrationModal();
-              
-              // Auto-fill patient ID in appointment form
-              document.getElementById('patient-id').value = response.data.data.patient_id;
-              
-              // Enable gender radios
-              document.querySelectorAll('input[name="gender"]').forEach(radio => {
-                  radio.disabled = false;
-                  if (radio.value === response.data.data.gender) {
-                      radio.checked = true;
-                  }
-              });
-          }
-      } catch (error) {
-          console.error('Registration error:', error);
-          
-          let errorMsg = 'Registration failed. Please try again.';
-          if (error.response?.data?.errors) {
-              errorMsg = Object.values(error.response.data.errors).flat().join('\n');
-          } else if (error.response?.data?.message) {
-              errorMsg = error.response.data.message;
-          }
-          
-          showToast(errorMsg, 'error');
-      } finally {
-          // Reset button state
-          const submitBtn = this.querySelector('button[type="submit"]');
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = 'Register';
-      }
-  });
-  </script>  </script>
+            const data = await response.json();
 
+            if (data.success) {
+                closeRegistrationModal();
+                showToast('Registration successful! Your Patient ID: ' + data.patient_id, 'success');
+                
+                // Auto-fill patient ID in appointment form
+                const patientIdField = document.getElementById('patient-id');
+                if (patientIdField) {
+                    patientIdField.value = data.patient_id;
+                    // Trigger fetch of patient details
+                    fetchPatientDetails();
+                }
+            } else {
+                showToast(data.message || 'Registration failed', 'error');
+                
+                // Show field-specific errors
+                if (data.errors) {
+                    Object.entries(data.errors).forEach(([field, messages]) => {
+                        const input = this.querySelector(`[name="${field}"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            const errorDiv = input.nextElementSibling?.classList.contains('invalid-feedback') 
+                                ? input.nextElementSibling
+                                : document.createElement('div');
+                            
+                            errorDiv.className = 'invalid-feedback';
+                            errorDiv.textContent = messages[0];
+                            input.parentNode.appendChild(errorDiv);
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('An error occurred during registration', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Register';
+        }
+    });
 
-
-</html></body></body>
+    // Clear errors when user starts typing
+    document.querySelectorAll('input, select, textarea').forEach(element => {
+        element.addEventListener('input', () => {
+            element.classList.remove('is-invalid');
+            const errorDiv = element.nextElementSibling;
+            if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                errorDiv.classList.add('hidden');
+            }
+        });
+    });
+  </script>
+</body>
 </html>

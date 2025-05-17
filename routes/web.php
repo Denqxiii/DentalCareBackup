@@ -2,132 +2,103 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
+    HomeController,
+    AdminController,
+    UserController,
     PatientController,
     AppointmentController,
-    TreatmentRecordController,
-    InventoryController,
-    StockMovementController,
-    ReportController,
-    BillController,
+    TreatmentController,
     PaymentController,
-    DashboardController,
-    SupplierController,
-    PrescriptionController
+    ReportController,
+    PrescriptionController,
+    InventoryController
 };
 
-// Public Routes
 Route::get('/', function () {
     return view('homepage');
 })->name('homepage');
 
-Route::get('/patients/register', function () {
-    return view('register_patients');
-})->name('register_patients');
-
-// Appointment Booking (Public)
-Route::controller(AppointmentController::class)->group(function () {
-    Route::get('/book-appointment', 'create')->name('book.appointment');
-    Route::post('/book-appointment', 'store')->name('appointment.store');
-});
-
-// Patient Registration (Public)
-Route::post('/patients', [PatientController::class, 'store'])->name('patients.store');
-
-// API Routes
-Route::prefix('api')->group(function () {
-    // Patient details from PatientController
-    Route::get('/patients/{id}', [PatientController::class, 'fetchPatientDetails'])
-         ->name('patient.details');
+// Public routes (no authentication required)
+Route::group(['middleware' => 'guest'], function() {
+    // Booking routes
+    Route::get('/book-appointment', [AppointmentController::class, 'createPublic'])
+         ->name('book.appointment');
          
-    // Patient details specific to appointments
-    Route::get('/appointments/patient/{id}', [AppointmentController::class, 'getPatientDetails'])
-         ->name('appointment.patient.details');
-         
-    Route::get('/appointments/{patient_id}', [AppointmentController::class, 'getAppointments'])
-         ->name('appointments.get');
+    Route::post('/book-appointment', [AppointmentController::class, 'store'])->name('appointment.store');
+    
+    Route::get('/appointment/confirmation/{id}', [AppointmentController::class, 'confirmation'])
+        ->name('appointment.confirmation');
+
+    Route::get('/api/patient/{patientId}', [AppointmentController::class, 'getPatientDetails']);
+
+    // Patient Registration
+    Route::get('/patients/register', [PatientController::class, 'showRegistrationForm'])
+         ->name('patients.showRegister');
+    Route::post('/patients/register', [PatientController::class, 'register'])
+         ->name('patients.register');
+
+    // Authentication Routes
+    Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])
+         ->name('login');
+    Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+    
+    // Password Reset Routes
+    Route::get('/password/reset', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])
+         ->name('password.request');
+    Route::post('/password/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])
+         ->name('password.email');
+    Route::get('/password/reset/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])
+         ->name('password.reset');
+    Route::post('/password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])
+         ->name('password.update');
 });
 
 // Authenticated Routes
-Route::middleware('auth')->group(function () {
-    // Dashboard
-    Route::get('/admin', function () {
-        return redirect()->route('dashboard');
-    })->name('admin');
-
-    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
-
-    // Patient Routes
-    Route::controller(PatientController::class)->group(function () {
-        Route::get('/patients', [PatientController::class, 'index'])->name('patient.index');
-        Route::get('/patients/{patient}', [PatientController::class, 'showDetails'])->name('patients.show_details');
-        Route::get('/patients/create', [PatientController::class, 'create'])->name('patients.create');
-        Route::get('/patients/{patient_id}/edit', 'edit')->name('patients.edit_patient');
-        Route::put('/patients/{patient_id}', 'update')->name('patients.update');
-        Route::get('/patients/history', 'history')->name('patients.history');
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+    Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])
+         ->name('logout');
+    
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::resource('users', UserController::class);
+    
+    // Patients
+    Route::resource('patients', PatientController::class)->except(['create', 'store']);
+    
+    // Appointments
+    Route::resource('appointments', AppointmentController::class);
+    
+    // Treatments
+    Route::resource('treatments', TreatmentController::class);
+    
+    // Payments
+    Route::prefix('payments')->group(function() {
+        Route::get('/', [PaymentController::class, 'index'])->name('payments.index');
+        Route::get('/create/{appointment}', [PaymentController::class, 'create'])->name('payments.create');
+        Route::post('/', [PaymentController::class, 'store'])->name('payments.store');
+        Route::get('/{payment}/receipt', [PaymentController::class, 'receipt'])->name('payments.receipt');
     });
-
-    // Treatment Records
-    Route::get('/patients/{patient_id}/treatments/create', [TreatmentRecordController::class, 'create'])
-         ->name('treatments.create');
-
-    // Appointments Management
-    Route::patch('/appointments/{appointment}/update-status', [AppointmentController::class, 'updateStatus'])
-        ->name('admin.appointments.update-status');
-    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
-    Route::get('/appointments/{appointment}', [AppointmentController::class, 'show'])
-        ->name('admin.appointments.show');
-
-    // Admin Group
-    Route::prefix('admin')->name('admin.')->group(function () {
-        Route::resource('appointments', AppointmentController::class);
-        Route::get('appointments/{id}/manage', [AppointmentController::class, 'manage'])
-             ->name('appointments.manage');
-    });
-
-    // Inventory Management
-    Route::controller(InventoryController::class)->group(function () {
-        Route::get('/inventory', 'index')->name('inventory.index');
-        Route::get('/inventory/create', 'create')->name('inventory.create');
-        Route::post('/inventory', 'store')->name('inventory.store');
-    });
-    Route::resource('inventory', InventoryController::class);
-    Route::resource('stock-movements', StockMovementController::class);
-
-    // Billing Routes Group
-    Route::prefix('billing')->name('billing.')->group(function() {
-        
-        // Bills - Full resource controller
-        Route::resource('bills', BillController::class)->names([
-            'index' => 'invoices',
-            'create' => 'invoices.create',
-            'store' => 'invoices.store',
-            // ...
-        ]);
-        
-        // Payments - Full resource controller
-        Route::resource('payments', PaymentController::class);
-        
-        // Special payment creation that requires a bill
-        Route::get('bills/{bill}/payments/create', [PaymentController::class, 'create'])
-            ->name('payments.create');
-        
-        // Additional generic payments route if needed
-        Route::get('payments', [PaymentController::class, 'index'])
-            ->name('payments'); // This creates billing.payments
-    });
-
+    
+    // Prescriptions
+    Route::resource('prescriptions', PrescriptionController::class);
+    
     // Reports
-    Route::controller(ReportController::class)->group(function () {
-        Route::get('/reports', 'index')->name('reports.index');
-        Route::get('/reports/patient-history', 'generatePatientHistory')->name('reports.patient');
-        Route::get('/reports/treatment-report', 'generateTreatmentReport')->name('reports.treatment_report');
-        Route::get('/reports/treatments', 'showReport')->name('reports.treatment');
-        Route::get('/reports/billing', 'billingReport')->name('reports.billing');
-        Route::get('/reports/financial', 'financial')->name('reports.financial'); // Fixed this line
+    Route::prefix('reports')->group(function() {
+        Route::get('/', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/financial', [ReportController::class, 'financial'])->name('reports.financial');
+        Route::get('/appointments', [ReportController::class, 'appointments'])->name('reports.appointments');
     });
-
-    //Prescription Management
-    Route::resource('prescriptions', 'App\Http\Controllers\PrescriptionController');
+    
+    // Inventory Routes
+    Route::prefix('inventory')->group(function() {
+        Route::get('/', [InventoryController::class, 'index'])->name('inventory.index');
+        Route::get('/create', [InventoryController::class, 'create'])->name('inventory.create');
+        Route::post('/', [InventoryController::class, 'store'])->name('inventory.store');
+        Route::get('/{item}/edit', [InventoryController::class, 'edit'])->name('inventory.edit');
+        Route::put('/{item}', [InventoryController::class, 'update'])->name('inventory.update');
+        
+        // Stock Movements
+        Route::get('/{item}/movements', [InventoryController::class, 'movements'])->name('inventory.movements');
+        Route::get('/movements/create', [InventoryController::class, 'createMovement'])->name('inventory.movements.create');
+        Route::post('/movements', [InventoryController::class, 'storeMovement'])->name('inventory.movements.store');
+    });
 });
-
-require __DIR__.'/auth.php';

@@ -3,31 +3,44 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Patient extends Model
 {
-    protected $primaryKey = 'patient_id';
-    public $incrementing = false;
-    protected $keyType = 'string';
-
     protected $fillable = [
-        'patient_id', 'first_name', 'middle_name', 'last_name', 
-        'gender', 'birth_date', 'email', 'phone', 'address'
+        'first_name',
+        'last_name',
+        'email',
+        'phone',
+        'gender',
+        'birth_date',
+        'address',
+        'patient_id'
     ];
 
-    public function medicalHistories(): HasMany
+    protected static function boot()
     {
-        return $this->hasMany(MedicalHistory::class, 'patient_id', 'patient_id');
+        parent::boot();
+
+        static::creating(function ($patient) {
+            $patient->patient_id = static::generatePatientId();
+        });
     }
 
-    public function treatmentRecords(): HasMany
+    public static function generatePatientId()
     {
-        return $this->hasMany(TreatmentRecord::class, 'patient_id', 'patient_id');
-    }
-
-    public function appointments(): HasMany
-    {
-        return $this->hasMany(Appointment::class, 'patient_id', 'patient_id');
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $id = '';
+        
+        for ($i = 0; $i < 5; $i++) {
+            $id .= $characters[rand(0, strlen($characters) - 1)];
+        }
+        
+        // Ensure the ID is unique
+        while (static::where('patient_id', $id)->exists()) {
+            $id = static::generatePatientId();
+        }
+        
+        return $id;
     }
 }

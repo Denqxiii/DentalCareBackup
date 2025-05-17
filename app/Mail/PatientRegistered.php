@@ -2,11 +2,10 @@
 
 namespace App\Mail;
 
+use App\Models\Patient;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Patient;
 
 class PatientRegistered extends Mailable
 {
@@ -14,21 +13,14 @@ class PatientRegistered extends Mailable
 
     public $patient;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(Patient $patient)
     {
         $this->patient = $patient;
     }
 
-    /**
-     * Build the message.
-     */
     public function build()
     {
-        return $this->subject('Welcome to Our Clinic, ' . $this->patient->first_name . '!')
-                    ->view('emails.patient_registered');
+        return $this->markdown('emails.patient_registered')
+                   ->subject('Your Patient Registration Details');
     }
 }
-

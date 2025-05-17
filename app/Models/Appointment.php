@@ -12,12 +12,10 @@ class Appointment extends Model
     protected $fillable = [
         'patient_id',
         'treatment_id',
+        'user_id',
         'appointment_date',
-        'appointment_time',
-        'phone_number', // Added
-        'gender',       // Added
-        'notes',        // Changed from 'message'
-        'status'
+        'status',
+        'notes'
     ];
 
     protected $casts = [

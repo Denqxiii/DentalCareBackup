@@ -2,23 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockMovement extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'inventory_id',
-        'type',
-        'quantity',
-        'reason',
-        'performed_by',
+        'inventory_item_id', 'type', 'quantity', 'notes'
     ];
 
-    public function inventory()
+    public function item(): BelongsTo
     {
-        return $this->belongsTo(Inventory::class, 'inventory_id');
+        return $this->belongsTo(InventoryItem::class);
     }
 }
