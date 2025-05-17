@@ -72,4 +72,9 @@ class Patient extends Model
             'treatment_id'    // Local key on treatment_records table
         );
     }
+
+    public function getNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
 }

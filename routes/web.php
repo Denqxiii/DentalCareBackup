@@ -8,7 +8,7 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\TreatmentController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\Admin\PrescriptionController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -17,6 +17,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\NoteController;
 use App\Http\Controllers\Admin\PatientController as AdminPatientController;
+
 
 // Register middleware
 Route::aliasMiddleware('admin', \App\Http\Middleware\AdminMiddleware::class);
@@ -117,7 +118,7 @@ Route::middleware(['auth', 'admin'])
         });
         
         // Prescriptions
-        Route::resource('prescriptions', PrescriptionController::class);
+        Route::resource('prescriptions', \App\Http\Controllers\Admin\PrescriptionController::class);
         
         // Reports
         Route::prefix('reports')->name('reports.')->group(function() {

@@ -2,118 +2,52 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Requests\Admin\PrescriptionRequest;
+use App\Http\Controllers\Controller;
 use App\Models\Patient;
+use App\Models\User;
 use App\Models\Prescription;
-use App\Repositories\PrescriptionRepository;
-use PDF;
+use Illuminate\Http\Request;
 
-class PrescriptionController extends BaseController
+class PrescriptionController extends Controller
 {
-    private $prescriptionRepository;
-
-    public function __construct()
+    public function create()
     {
-        parent::__construct();
-        $this->prescriptionRepository = app(PrescriptionRepository::class);
+        $patients = Patient::orderBy('first_name')->get();
+        $doctors = User::where('role', 'doctor')->orderBy('name')->get();
+        
+        return view('admin.prescription.create', compact('patients', 'doctors'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'doctor_id' => 'required|exists:users,id',
+            'medication' => 'required|string|max:500',
+            'dosage' => 'required|string|max:500',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $prescription = Prescription::create([
+            'patient_id' => $validated['patient_id'],
+            'doctor_id' => $validated['doctor_id'],
+            'medication' => $validated['medication'],
+            'dosage' => $validated['dosage'],
+            'notes' => $validated['notes'] ?? null,
+            'status' => 'active',
+            'created_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.prescriptions.show', $prescription->id)
+            ->with('success', 'Prescription created successfully!');
     }
 
     public function index()
     {
-        $prescriptions = $this->prescriptionRepository->getAllWithPaginate(15);
-        
-        $this->title = "Prescription Management";
-        $this->content = view('admin.prescriptions.index', 
-            compact('prescriptions'))->render();
-            
-        return $this->renderOutput();
-    }
+        $prescriptions = Prescription::with(['patient', 'doctor'])
+            ->latest()
+            ->paginate(10);
 
-    public function create($patientId = null)
-    {
-        $patients = Patient::active()->get();
-        $medicines = Medicine::all();
-        
-        $this->title = "Create New Prescription";
-        $this->content = view('admin.prescriptions.create', 
-            compact('patients', 'medicines', 'patientId'))->render();
-            
-        return $this->renderOutput();
-    }
-
-    public function store(PrescriptionRequest $request)
-    {
-        $data = $request->all();
-        $prescription = $this->prescriptionRepository->create($data);
-        
-        return redirect()
-            ->route('admin.prescriptions.show', $prescription->id)
-            ->with(['success' => 'Prescription created successfully']);
-    }
-
-    public function show($id)
-    {
-        $prescription = $this->prescriptionRepository->getEdit($id);
-        
-        $this->title = "Prescription #" . $prescription->id;
-        $this->content = view('admin.prescriptions.show', 
-            compact('prescription'))->render();
-            
-        return $this->renderOutput();
-    }
-
-    public function edit($id)
-    {
-        $prescription = $this->prescriptionRepository->getEdit($id);
-        $patients = Patient::active()->get();
-        $medicines = Medicine::all();
-        
-        $this->title = "Edit Prescription #" . $prescription->id;
-        $this->content = view('admin.prescriptions.edit', 
-            compact('prescription', 'patients', 'medicines'))->render();
-            
-        return $this->renderOutput();
-    }
-
-    public function update(PrescriptionRequest $request, $id)
-    {
-        $prescription = $this->prescriptionRepository->getEdit($id);
-        $data = $request->all();
-        
-        $prescription->update($data);
-        
-        return redirect()
-            ->route('admin.prescriptions.show', $prescription->id)
-            ->with(['success' => 'Prescription updated successfully']);
-    }
-
-    public function destroy($id)
-    {
-        $prescription = $this->prescriptionRepository->getEdit($id);
-        $prescription->delete();
-        
-        return redirect()
-            ->route('admin.prescriptions.index')
-            ->with(['success' => 'Prescription cancelled']);
-    }
-    
-    public function print($id)
-    {
-        $prescription = $this->prescriptionRepository->getEdit($id);
-        $pdf = PDF::loadView('admin.prescriptions.print', compact('prescription'));
-        
-        return $pdf->stream('prescription_' . $id . '.pdf');
-    }
-    
-    public function patientPrescriptions($patientId)
-    {
-        $patient = Patient::findOrFail($patientId);
-        $prescriptions = $patient->prescriptions()->latest()->paginate(10);
-        
-        $this->title = "Prescription History: " . $patient->full_name;
-        $this->content = view('admin.prescriptions.patient_history', 
-            compact('patient', 'prescriptions'))->render();
-            
-        return $this->renderOutput();
+        return view('admin.prescription.index', compact('prescriptions'));
     }
 }

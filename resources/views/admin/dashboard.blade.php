@@ -126,9 +126,9 @@
                                             <tbody>
                                                 @foreach($recentPayments as $payment)
                                                     <tr>
-                                                        <td>{{ $payment->patient->name ?? 'N/A' }}</td>
+                                                        <td>{{ $appointment->patient->name ?? 'N/A' }}</td>
                                                         <td>${{ $payment->amount ?? '0.00' }}</td>
-                                                        <td>{{ $payment->payment_date->format('m/d/Y') ?? 'N/A' }}</td>
+                                                        <td>{{ $appointment->appointment_date->format('m/d/Y') ?? 'N/A' }}</td>
                                                         <td>
                                                             <span class="badge badge-{{ $payment->status == 'Paid' ? 'success' : 'warning' }}">
                                                                 {{ $payment->status ?? 'N/A' }}
