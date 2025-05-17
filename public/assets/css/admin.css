@@ -1,0 +1,131 @@
+.sidebar .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, .1);
+}
+
+.sidebar .nav-link.active {
+    color: #fff;
+    background-color: rgba(255, 255, 255, .2);
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+}
+
+/* Content area */
+main {
+    padding-top: 1.5rem;
+}
+
+/* Info boxes */
+.info-box {
+    min-height: 100px;
+    background-color: #fff;
+    width: 100%;
+    box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+    border-radius: 4px;
+    margin-bottom: 20px;
+    display: flex;
+    padding: 15px;
+}
+
+.info-box-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    font-size: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: #fff;
+}
+
+.info-box-content {
+    padding: 5px 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.info-box-text {
+    display: block;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 700;
+}
+
+.info-box-number {
+    display: block;
+    font-weight: 700;
+    font-size: 22px;
+}
+
+.bg-info .info-box-icon {
+    background-color: #17a2b8;
+}
+
+.bg-success .info-box-icon {
+    background-color: #28a745;
+}
+
+.bg-warning .info-box-icon {
+    background-color: #ffc107;
+}
+
+.bg-danger .info-box-icon {
+    background-color: #dc3545;
+}
+
+/* Cards */
+.card {
+    margin-bottom: 20px;
+    box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+    border: 0;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    padding: .75rem 1.25rem;
+    position: relative;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+}
+
+.card-title {
+    float: left;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Tables */
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+/* Badges */
+.badge {
+    padding: .45em .6em;
+    font-size: 85%;
+    font-weight: 600;
+}
+
+/* Responsive fixes */
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: static;
+        height: auto;
+        padding-top: 0;
+    }
+    
+    main {
+        padding-top: 0;
+    }
+}

@@ -10,31 +10,48 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'invoice_id',
+        'patient_id',
         'amount',
+        'date',
+        'status',
         'payment_method',
-        'reference_number',
-        'payment_number',
         'notes',
     ];
 
-    /**
-     * Get the invoice that the payment belongs to
-     */
-    public function invoice()
+    protected $casts = [
+        'date' => 'date',
+        'amount' => 'decimal:2',
+    ];
+
+    protected $dates = ['payment_date'];
+
+    public function patient()
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->belongsTo(Patient::class);
     }
 
-    /**
-     * Generate a unique payment number
-     * 
-     * @return string
-     */
-    public static function generatePaymentNumber()
+    public function getDateAttribute()
+{
+    return $this->payment_date;
+}
+
+    public function getAmountAttribute()
     {
-        $latestPayment = self::latest()->first();
-        $nextId = $latestPayment ? $latestPayment->id + 1 : 1;
-        return 'PAY-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
+        return $this->payment_amount;
+    }
+
+    public function getStatusAttribute()
+    {
+        return $this->payment_status;
+    }
+
+    public function getPaymentMethodAttribute()
+    {
+        return $this->payment_method;
+    }
+
+    public function getNotesAttribute()
+    {
+        return $this->payment_notes;
     }
 }

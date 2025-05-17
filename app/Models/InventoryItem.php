@@ -2,18 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InventoryItem extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'name', 'description', 'category',
-        'current_quantity', 'low_stock_threshold'
+        'name',
+        'description',
+        'quantity',
+        'unit_price',
+        'reorder_level',
+        'category',
+        'supplier',
     ];
 
-    public function movements(): HasMany
-    {
-        return $this->hasMany(StockMovement::class);
-    }
+    protected $casts = [
+        'unit_price' => 'decimal:2',
+    ];
 }

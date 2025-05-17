@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Low Stock Report')
 

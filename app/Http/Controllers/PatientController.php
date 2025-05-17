@@ -18,24 +18,34 @@ class PatientController extends Controller
             'email' => 'required|email|unique:patients,email',
             'phone' => 'required|string|max:20',
             'gender' => 'required|in:Male,Female,Other',
-            'birth_date' => 'required|date',
-            'address' => 'required|string',
-            // middle_name is optional
+            'birth_date' => 'required|date|before:today',
+            'address' => 'required|string|max:500',
+            'middle_name' => 'nullable|string|max:255',
         ]);
 
-        // Add patient_id generation
-        $validated['patient_id'] = 'DC' . strtoupper(Str::random(5)); // DC followed by 5 random chars
-        
-        $patient = Patient::create($validated);
-        
-        // Send registration email
-        Mail::to($patient->email)->send(new PatientRegistered($patient));
+        // Generate unique patient ID
+        do {
+            $validated['patient_id'] = 'PAT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
+        } while (Patient::where('patient_id', $validated['patient_id'])->exists());
 
-        return response()->json([
-            'success' => true,
-            'patient_id' => $patient->patient_id,
-            'message' => 'Registration successful! Check your email for details.'
-        ]);
+        try {
+            $patient = Patient::create($validated);
+            
+            Mail::to($patient->email)->queue(new PatientRegistered($patient));
+
+            return response()->json([
+                'success' => true,
+                'patient_id' => $patient->patient_id,
+                'message' => 'Registration successful!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Registration failed',
+                'error' => env('APP_DEBUG') ? $e->getMessage() : null
+            ], 500);
+        }
     }
 
     public function getByPatientId($patientId)
@@ -58,5 +68,11 @@ class PatientController extends Controller
                 'email' => $patient->email
             ]
         ]);
+    }
+
+    public function index()
+    {
+        $patients = Patient::all();
+        return view('patients.index', compact('patients'));
     }
 }

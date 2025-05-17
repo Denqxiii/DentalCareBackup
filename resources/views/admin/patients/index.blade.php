@@ -1,11 +1,11 @@
-@extends('admin.layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Patients')
 
 @section('content')
 <div class="d-flex justify-content-between mb-4">
     <h4>Patient List</h4>
-    <a href="/admin/patients/create" class="btn btn-primary">
+    <a href="{{ route('admin.patients.create') }}" class="btn btn-primary">
         <i class="bi bi-plus"></i> Add Patient
     </a>
 </div>
@@ -23,12 +23,12 @@
     <tbody>
         @foreach($patients as $patient)
         <tr>
-            <td>{{ $patient->id }}</td>
-            <td>{{ $patient->name }}</td>
+            <td>{{ $patient->patient_id }}</td>
+            <td>{{ $patient->first_name }} {{ $patient->middle_name ? $patient->middle_name . ' ' : '' }}{{ $patient->last_name }}</td>
             <td>{{ $patient->phone }}</td>
             <td>{{ $patient->email }}</td>
             <td>
-                <a href="/admin/patients/{{ $patient->id }}" class="btn btn-sm btn-info">
+                <a href="{{ route('admin.patients.show', $patient->patient_id) }}" class="btn btn-sm btn-info">
                     <i class="bi bi-eye"></i>
                 </a>
             </td>

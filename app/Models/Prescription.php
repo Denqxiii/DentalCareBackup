@@ -2,29 +2,34 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Prescription extends Model
 {
+    use HasFactory;
+    
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         'patient_id',
-        'doctor_id',
-        'diagnosis',
-        'instructions'
+        'medication',
+        'dosage',
+        'frequency',
+        'duration',
+        'notes',
+        'issued_date',
+        'expiry_date'
     ];
-
+    
+    /**
+     * Get the patient that the prescription belongs to.
+     */
     public function patient()
     {
         return $this->belongsTo(Patient::class);
-    }
-
-    public function doctor()
-    {
-        return $this->belongsTo(User::class, 'doctor_id');
-    }
-
-    public function medications()
-    {
-        return $this->hasMany(PrescriptionMedication::class);
     }
 }

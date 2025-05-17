@@ -8,16 +8,20 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && auth()->user()->is_admin) {
-            return $next($request);
+        if (!auth()->check()) {
+            return redirect()->route('login')
+                ->with('error', 'You must be logged in to access this area.');
         }
-        return redirect('/');
+
+        // Check both is_admin and role for backward compatibility
+        $user = auth()->user();
+        if (!($user->is_admin ?? false) && $user->role !== 'admin') {
+            return redirect()->route('homepage')
+                ->with('error', 'You must be an administrator to access this area.');
+        }
+
+        return $next($request);
     }
 }

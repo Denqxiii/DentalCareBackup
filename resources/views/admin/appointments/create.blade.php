@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Schedule Appointment')
 
@@ -13,8 +13,11 @@
             <div class="mb-3">
                 <label class="form-label">Patient</label>
                 <select class="form-select" name="patient_id" required>
+                    <option value="">Select Patient</option>
                     @foreach($patients as $patient)
-                    <option value="{{ $patient->id }}">{{ $patient->name }}</option>
+                        <option value="{{ $patient->id }}">
+                            {{ trim($patient->first_name . ' ' . ($patient->middle_name ? $patient->middle_name . ' ' : '') . $patient->last_name) }}
+                        </option>
                     @endforeach
                 </select>
             </div>

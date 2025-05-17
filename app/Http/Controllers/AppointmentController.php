@@ -19,44 +19,27 @@ class AppointmentController extends Controller
         return view('book_appointment', compact('treatments'));
     }
 
-    public function store(Request $request)
+    public function storeGuest(Request $request)
     {
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,patient_id',
             'patient_name' => 'required|string|max:255',
             'patient_phone' => 'required|string|max:20',
             'treatment_id' => 'required|exists:treatments,id',
-            'appointment_date' => 'required|date',
-            'appointment_time' => 'required',
-            'gender' => 'required|in:Male,Female,Other',
-            'message' => 'nullable|string'
+            'appointment_date' => 'required|date|after:now',
+            'message' => 'nullable|string',
+            'gender' => 'required|in:Male,Female,Other'
         ]);
 
-        // Get the first available user or create a default one
-        $defaultUser = User::first();
+        $appointment = Appointment::create($validated);
         
-        if (!$defaultUser) {
-            $defaultUser = User::create([
-                'name' => 'System Admin',
-                'email' => 'admin@example.com',
-                'password' => Hash::make('password'),
-            ]);
-        }
-
-        $appointment = Appointment::create([
-            'patient_id' => Patient::where('patient_id', $validated['patient_id'])->first()->id,
-            'treatment_id' => $validated['treatment_id'],
-            'user_id' => auth()->id() ?? $defaultUser->id, // Use logged-in user or default
-            'appointment_date' => $validated['appointment_date'] . ' ' . $validated['appointment_time'],
-            'status' => 'scheduled',
-            'notes' => $validated['message'] ?? null
-        ]);
-
         return response()->json([
             'success' => true,
-            'message' => 'Appointment booked successfully'
+            'message' => 'Appointment booked successfully!',
+            'data' => $appointment
         ]);
     }
+
 
     protected function createNewPatient(array $data)
     {
@@ -93,5 +76,63 @@ class AppointmentController extends Controller
                 'email' => $patient->email
             ]
         ]);
+    }
+
+    public function index()
+    {
+        $query = Appointment::with(['patient', 'treatment'])
+            ->latest();
+        
+        // Improved search filter
+        if ($search = request('search')) {
+            $query->whereHas('patient', function($q) use ($search) {
+                $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                ->orWhere('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('middle_name', 'like', "%{$search}%");
+            });
+        }
+        
+        // Treatment filter
+        if ($treatmentId = request('treatment')) {
+            $query->where('treatment_id', $treatmentId);
+        }
+        
+        $appointments = $query->paginate(10);
+        $treatments = Treatment::all();
+        
+        return view('admin.appointments.index', compact('appointments', 'treatments'));
+    }
+
+    public function create()
+    {
+        $patients = Patient::orderBy('last_name')->orderBy('first_name')->get();
+        $treatments = Treatment::active()->get();
+        
+        return view('admin.appointments.create', compact('patients', 'treatments'));
+    }
+
+    public function complete()
+    {
+        $appointments = Appointment::with(['patient', 'treatment'])
+                                ->where('status', 'completed')
+                                ->orderBy('appointment_date', 'desc')
+                                ->paginate(10);
+                                
+        return view('admin.appointments.completed', compact('appointments'));
+    }
+
+    public function markComplete(Appointment $appointment)
+    {
+        $appointment->update(['status' => 'completed']);
+        
+        return back()->with('success', 'Appointment marked as completed.');
+    }
+
+    public function markCancel(Appointment $appointment)
+    {
+        $appointment->update(['status' => 'canceled']);
+        
+        return back()->with('success', 'Appointment has been canceled.');
     }
 }

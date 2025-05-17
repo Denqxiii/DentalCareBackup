@@ -12,19 +12,19 @@ class Appointment extends Model
     protected $fillable = [
         'patient_id',
         'treatment_id',
-        'user_id',
         'appointment_date',
+        'type',
+        'notes',
         'status',
-        'notes'
     ];
 
     protected $casts = [
-        'appointment_date' => 'date', // Cast appointment_date to a Carbon instance as a date
+        'appointment_date' => 'datetime',
     ];
 
     public function patient()
     {
-        return $this->belongsTo(Patient::class, 'patient_id');
+        return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
     }
 
     public function treatment()
@@ -32,8 +32,13 @@ class Appointment extends Model
         return $this->belongsTo(Treatment::class);
     }
 
-    public function service()
+    public function getDateAttribute()
     {
-        return $this->belongsTo(Treatment::class, 'treatment_id');
+        return $this->appointment_date;
+    }
+
+    public function getTimeAttribute()
+    {
+        return $this->appointment_time;
     }
 }
